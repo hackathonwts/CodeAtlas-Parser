@@ -1,0 +1,9 @@
+{
+    "firstName": "Admin",
+    "lastName": "User",
+    "fullName": "Admin User",
+    "email": "admin@yopmail.com",
+    "userName": "admin",
+    "password": "12345678",
+    "status": "Active"
+}
