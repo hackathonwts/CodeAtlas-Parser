@@ -1,7 +1,11 @@
 import { KGNode, KGRelation } from "../types/kg.types";
 import neo4j, { Session } from "neo4j-driver";
+import config from "../config";
 
-export const driver = neo4j.driver("neo4j://localhost:7687", neo4j.auth.basic("neo4j", "password"));
+export const driver = neo4j.driver(
+    `${config.neo4j.host}:${config.neo4j.port}`,
+    neo4j.auth.basic(config.neo4j.username, config.neo4j.password)
+);
 export async function withSession<T>(work: (session: Session) => Promise<T>): Promise<T> {
     const session = driver.session();
     try {
