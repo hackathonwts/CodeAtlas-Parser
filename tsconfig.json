@@ -4,19 +4,25 @@
     // File Layout
     "rootDir": "./src",
     "outDir": "./dist",
-    "paths": {"*": ["../*"]},
-
+    "paths": {
+      "*": [
+        "../*"
+      ]
+    },
     // Environment Settings
     "module": "commonjs",
     "target": "es2022",
-    "lib": ["ES2020"],
-    "types": ["node"],
-
+    "lib": [
+      "ES2020"
+    ],
+    "types": [
+      "node"
+    ],
+    "esModuleInterop": true,
     // Other Outputs
     "sourceMap": true,
     "declaration": true,
     "declarationMap": true,
-
     // Style Options
     // "noImplicitReturns": true,
     // "noImplicitOverride": true,
@@ -24,9 +30,13 @@
     // "noUnusedParameters": true,
     // "noFallthroughCasesInSwitch": true,
     // "noPropertyAccessFromIndexSignature": true,
-
     "resolveJsonModule": true,
     "removeComments": true,
-    "skipLibCheck": true,
-  }
+    "skipLibCheck": true
+  },
+  "exclude": [
+    "node_modules",
+    "dist",
+    "projects"
+  ]
 }
