@@ -1,5 +1,3 @@
-import { inspect } from "node:util";
-import { writeFileSync } from "node:fs";
 import { Project } from "ts-morph";
 import { extractDI } from "./utils/extract-di";
 import { extractMethodCalls } from "./utils/extract-method-calls";
@@ -9,7 +7,7 @@ import { extractStructure } from "./utils/extract-structure";
 
 export default function parser(projectPath: string) {
     const project = new Project({
-        tsConfigFilePath: projectPath + "tsconfig.json",
+        tsConfigFilePath: projectPath + "/tsconfig.json",
         skipAddingFilesFromTsConfig: false,
     });
 
