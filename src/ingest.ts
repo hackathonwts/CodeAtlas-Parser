@@ -4,14 +4,11 @@ export async function ingest(nodes: any[], relations: any[], databaseName: strin
     const db = new Neo4jDatabase(databaseName);
 
     try {
-        console.log("Importing nodes...");
-        await db.importNodes(nodes);
+        // Clean the database first, then import new data
+        await db.cleanAndImport(nodes, relations);
 
-        console.log("Importing relations...");
-        await db.importRelations(relations);
-
-        console.log("✅ Knowledge Graph imported");
+        console.log("✅ Knowledge Graph imported successfully");
     } finally {
-        await db.close();
+        await Neo4jDatabase.closeDriver();
     }
 }
