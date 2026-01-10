@@ -4,7 +4,6 @@ export async function ingest(nodes: any[], relations: any[], databaseName: strin
     const db = new Neo4jDatabase(databaseName);
 
     try {
-        // Clean the database first, then import new data
         await db.cleanAndImport(nodes, relations);
 
         console.log("✅ Knowledge Graph imported successfully");

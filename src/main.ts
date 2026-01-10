@@ -12,7 +12,6 @@ async function main() {
         username: process.env.GIT_USER_NAME,
         password: process.env.GIT_PASSWORD,
     };
-    console.log(projectGitConfig);
     const result = await cloneGitRepository(projectGitConfig);
     if (result.success) {
         const { nodes, relations } = parser(result.clonedPath);
