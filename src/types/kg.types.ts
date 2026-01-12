@@ -2,7 +2,16 @@ export type NodeKind =
     | "File"
     | "Class"
     | "Method"
-    | "Route";
+    | "Route"
+    | "Function"
+    | "Interface"
+    | "Enum"
+    | "EnumMember"
+    | "TypeAlias"
+    | "Property"
+    | "Parameter"
+    | "Variable"
+    | "Model";
 
 export interface KGNode {
     id: string;
