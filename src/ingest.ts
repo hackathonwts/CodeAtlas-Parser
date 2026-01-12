@@ -1,18 +1,13 @@
-import { readFileSync } from "node:fs";
-import { importNodes, importRelations } from "./db/neo4j.db";
+import { Neo4jDatabase } from "./db/neo4j.db";
 
-const kg = JSON.parse(readFileSync("kg.json", "utf-8"));
+export async function ingest(nodes: any[], relations: any[], databaseName: string = "neo4j") {
+    const db = new Neo4jDatabase(databaseName);
 
-async function executeIngestion() {
-    console.log("Importing nodes...");
-    await importNodes(kg.nodes);
+    try {
+        await db.cleanAndImport(nodes, relations);
 
-    console.log("Importing relations...");
-    await importRelations(kg.relations);
-
-    console.log("✅ Knowledge Graph imported");
+        console.log("✅ Knowledge Graph imported successfully");
+    } finally {
+        await Neo4jDatabase.closeDriver();
+    }
 }
-
-executeIngestion()
-    .then(() => process.exit(0))
-    .catch(console.error);
