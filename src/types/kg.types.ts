@@ -13,12 +13,14 @@ export type NodeKind =
     | "Variable"
     | "Model";
 
+
 export interface KGNode {
     id: string;
     kind: NodeKind;
     name: string;
     filePath?: string;
     parentId?: string;
+    subtype?: string; // For files, indicates the discovered subtype
     meta?: Record<string, any>;
 }
 

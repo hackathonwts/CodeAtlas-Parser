@@ -7,6 +7,7 @@ import { extractTypeUsage } from "./utils/extract-type-usage";
 import { extractImports } from "./utils/extract-imports";
 import { extractInheritance } from "./utils/extract-inheritance";
 import { KGNode, KGRelation } from "./types/kg.types";
+import { getSubtypeStats } from "./utils/subtype-query.js";
 
 /**
  * Main parser function that extracts a comprehensive knowledge graph from a TypeScript project.
@@ -60,6 +61,20 @@ export default function parser(projectPath: string): { nodes: KGNode[]; relation
         skipAddingFilesFromTsConfig: false,
     });
 
+    // Log detected path aliases from tsconfig.json
+    const compilerOptions = project.getCompilerOptions();
+    const paths = compilerOptions.paths;
+
+    if (paths && Object.keys(paths).length > 0) {
+        console.log(`\n🔗 Detected ${Object.keys(paths).length} TypeScript Path Alias(es):`);
+        Object.entries(paths).forEach(([alias, targets]) => {
+            console.log(`   ${alias} → ${JSON.stringify(targets)}`);
+        });
+        console.log('');
+    } else {
+        console.log(`\n⚠️  No path aliases found in tsconfig.json\n`);
+    }
+
     // Extract structure (files, classes, methods, functions, interfaces, enums, etc.)
     const structure = extractStructure(project);
 
@@ -109,6 +124,17 @@ export default function parser(projectPath: string): { nodes: KGNode[]; relation
     console.log(`   - Interfaces: ${nodes.filter(n => n.kind === "Interface").length}`);
     console.log(`   - Enums: ${nodes.filter(n => n.kind === "Enum").length}`);
     console.log(`   - Routes: ${nodes.filter(n => n.kind === "Route").length}`);
+
+    // Show file subtype breakdown
+    const subtypeStats = getSubtypeStats(nodes);
+    if (Object.keys(subtypeStats).length > 0) {
+        console.log(`\n📁 File Subtypes Detected:`);
+        Object.entries(subtypeStats)
+            .sort(([, a], [, b]) => b - a) // Sort by count descending
+            .forEach(([subtype, count]) => {
+                console.log(`   - ${subtype}: ${count}`);
+            });
+    }
 
     return { nodes, relations };
 }

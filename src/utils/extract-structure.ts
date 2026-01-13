@@ -1,6 +1,8 @@
 import { Project, SyntaxKind } from "ts-morph";
-import { KGNode, KGRelation } from "../types/kg.types";
+import { KGNode, KGRelation } from "../types/kg.types.js";
 import { relative, sep } from "path";
+import { detectFileSubtype } from "./detect-file-subtype.js";
+import * as IdGen from "./id-generator.js";
 
 export function extractStructure(project: Project): { nodes: KGNode[]; relations: KGRelation[] } {
     const nodes: KGNode[] = [];
@@ -14,20 +16,33 @@ export function extractStructure(project: Project): { nodes: KGNode[]; relations
     project.getSourceFiles().forEach(file => {
         const absolutePath = file.getFilePath();
         const relativePath = `src/${relative(srcRoot, absolutePath).split(sep).join("/")}`;
-        const fileId = `file:${relativePath}`;
 
-        // Add File node
-        nodes.push({
+        // Add File node with dynamically detected subtype
+        const fileName = file.getBaseName();
+        const fileSubtype = detectFileSubtype(fileName);
+        const fileId = IdGen.generateFileId(relativePath, fileSubtype);
+
+        const fileNode: KGNode = {
             id: fileId,
             kind: "File",
-            name: file.getBaseName(),
+            name: fileName,
             filePath: relativePath,
-        });
+        };
+
+        // Add subtype if detected
+        if (fileSubtype) {
+            fileNode.subtype = fileSubtype;
+            fileNode.meta = {
+                subtype: fileSubtype, // Also add to meta for easier querying
+            };
+        }
+
+        nodes.push(fileNode);
 
         // Extract Classes and their members
         file.getClasses().forEach(cls => {
             const className = cls.getName() || "AnonymousClass";
-            const classId = `class:${className}`;
+            const classId = IdGen.generateClassId(className, relativePath);
 
             nodes.push({
                 id: classId,
@@ -45,7 +60,7 @@ export function extractStructure(project: Project): { nodes: KGNode[]; relations
             // Extract Methods
             cls.getMethods().forEach(method => {
                 const methodName = method.getName();
-                const methodId = `method:${className}.${methodName}`;
+                const methodId = IdGen.generateMethodId(className, methodName, relativePath);
 
                 nodes.push({
                     id: methodId,
@@ -62,6 +77,7 @@ export function extractStructure(project: Project): { nodes: KGNode[]; relations
                             name: p.getName(),
                             type: p.getType().getText(),
                         })),
+                        sourceCode: method.getText(), // Full method source code
                     },
                 });
 
@@ -75,7 +91,7 @@ export function extractStructure(project: Project): { nodes: KGNode[]; relations
                 method.getParameters().forEach(param => {
                     const paramName = param.getName();
                     const paramType = param.getType().getText();
-                    const paramId = `param:${className}.${methodName}.${paramName}`;
+                    const paramId = IdGen.generateParameterId(methodId, paramName, relativePath);
 
                     nodes.push({
                         id: paramId,
@@ -84,6 +100,7 @@ export function extractStructure(project: Project): { nodes: KGNode[]; relations
                         parentId: methodId,
                         meta: {
                             type: paramType,
+                            sourceCode: param.getText(), // Parameter declaration
                         },
                     });
 
@@ -133,7 +150,7 @@ export function extractStructure(project: Project): { nodes: KGNode[]; relations
             // Extract Properties
             cls.getProperties().forEach(prop => {
                 const propName = prop.getName();
-                const propId = `property:${className}.${propName}`;
+                const propId = IdGen.generatePropertyId(className, propName, relativePath);
 
                 nodes.push({
                     id: propId,
@@ -145,6 +162,7 @@ export function extractStructure(project: Project): { nodes: KGNode[]; relations
                         type: prop.getType()?.getText() || "any",
                         isStatic: prop.isStatic(),
                         visibility: prop.getScope(),
+                        sourceCode: prop.getText(), // Property declaration
                     },
                 });
 
@@ -188,7 +206,7 @@ export function extractStructure(project: Project): { nodes: KGNode[]; relations
         // Extract standalone Functions
         file.getFunctions().forEach(func => {
             const funcName = func.getName() || "anonymous";
-            const funcId = `function:${relativePath}:${funcName}`;
+            const funcId = IdGen.generateFunctionId(funcName, relativePath);
 
             nodes.push({
                 id: funcId,
@@ -203,6 +221,7 @@ export function extractStructure(project: Project): { nodes: KGNode[]; relations
                         name: p.getName(),
                         type: p.getType().getText(),
                     })),
+                    sourceCode: func.getText(), // Full function source code
                 },
             });
 
@@ -216,7 +235,7 @@ export function extractStructure(project: Project): { nodes: KGNode[]; relations
         // Extract Interfaces
         file.getInterfaces().forEach(iface => {
             const ifaceName = iface.getName();
-            const ifaceId = `interface:${ifaceName}`;
+            const ifaceId = IdGen.generateInterfaceId(ifaceName, relativePath);
 
             nodes.push({
                 id: ifaceId,
@@ -252,7 +271,7 @@ export function extractStructure(project: Project): { nodes: KGNode[]; relations
         // Extract Enums
         file.getEnums().forEach(enumDecl => {
             const enumName = enumDecl.getName();
-            const enumId = `enum:${enumName}`;
+            const enumId = IdGen.generateEnumId(enumName, relativePath);
 
             nodes.push({
                 id: enumId,
@@ -273,7 +292,7 @@ export function extractStructure(project: Project): { nodes: KGNode[]; relations
             // Extract Enum Members
             enumDecl.getMembers().forEach(member => {
                 const memberName = member.getName();
-                const memberId = `enumMember:${enumName}.${memberName}`;
+                const memberId = IdGen.generateEnumMemberId(enumName, memberName, relativePath);
 
                 nodes.push({
                     id: memberId,
@@ -282,6 +301,7 @@ export function extractStructure(project: Project): { nodes: KGNode[]; relations
                     parentId: enumId,
                     meta: {
                         value: member.getValue(),
+                        sourceCode: member.getText(), // Enum member declaration
                     },
                 });
 
@@ -296,7 +316,7 @@ export function extractStructure(project: Project): { nodes: KGNode[]; relations
         // Extract Type Aliases
         file.getTypeAliases().forEach(typeAlias => {
             const typeName = typeAlias.getName();
-            const typeId = `type:${typeName}`;
+            const typeId = IdGen.generateTypeAliasId(typeName, relativePath);
 
             nodes.push({
                 id: typeId,
@@ -306,6 +326,7 @@ export function extractStructure(project: Project): { nodes: KGNode[]; relations
                 meta: {
                     isExported: typeAlias.isExported(),
                     definition: typeAlias.getType().getText(),
+                    sourceCode: typeAlias.getText(), // Full type alias declaration
                 },
             });
 
@@ -320,7 +341,7 @@ export function extractStructure(project: Project): { nodes: KGNode[]; relations
         file.getVariableStatements().forEach(varStmt => {
             varStmt.getDeclarations().forEach(varDecl => {
                 const varName = varDecl.getName();
-                const varId = `variable:${relativePath}:${varName}`;
+                const varId = IdGen.generateVariableId(varName, relativePath);
 
                 nodes.push({
                     id: varId,
@@ -331,6 +352,7 @@ export function extractStructure(project: Project): { nodes: KGNode[]; relations
                         isExported: varStmt.isExported(),
                         type: varDecl.getType()?.getText() || "any",
                         declarationType: varStmt.getDeclarationKind(),
+                        sourceCode: varDecl.getText(), // Variable declaration
                     },
                 });
 

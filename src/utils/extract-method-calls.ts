@@ -1,6 +1,7 @@
 import { Project, SyntaxKind, PropertyAccessExpression, Node, SourceFile, ClassDeclaration } from "ts-morph";
 import { KGRelation } from "../types/kg.types";
 import { relative, sep } from "path";
+import * as IdGen from "./id-generator.js";
 
 /**
  * Extracts method call relationships - tracks which methods call which other methods
@@ -21,7 +22,7 @@ export function extractMethodCalls(project: Project): KGRelation[] {
             if (!className) return;
 
             cls.getMethods().forEach(method => {
-                const fromMethodId = `method:${className}.${method.getName()}`;
+                const fromMethodId = IdGen.generateMethodId(className, method.getName(), relativePath);
 
                 // Find all call expressions within this method
                 method.getDescendantsOfKind(SyntaxKind.CallExpression).forEach(call => {
