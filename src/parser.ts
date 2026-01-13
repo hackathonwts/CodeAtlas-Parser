@@ -8,6 +8,8 @@ import { extractImports } from "./utils/extract-imports";
 import { extractInheritance } from "./utils/extract-inheritance";
 import { KGNode, KGRelation } from "./types/kg.types";
 import { getSubtypeStats } from "./utils/subtype-query.js";
+import { extractMarkdownDocs } from "./utils/extract-markdown-docs.js";
+import { extractDescriptions } from "./utils/extract-descriptions.js";
 
 /**
  * Main parser function that extracts a comprehensive knowledge graph from a TypeScript project.
@@ -135,6 +137,33 @@ export default function parser(projectPath: string): { nodes: KGNode[]; relation
                 console.log(`   - ${subtype}: ${count}`);
             });
     }
+
+    // Extract documentation (separate from graph database)
+    console.log('\n📚 Extracting documentation...');
+    const markdownDocs = extractMarkdownDocs(projectPath, nodes);
+    const descriptions = extractDescriptions(project);
+
+    // Create documentation JSON
+    const documentation = {
+        markdown: markdownDocs,
+        descriptions: descriptions,
+        metadata: {
+            extractedAt: new Date().toISOString(),
+            totalMarkdownFiles: markdownDocs.length,
+            matchedMarkdownFiles: markdownDocs.filter(d => d.matchType !== "unmatched").length,
+            totalDescriptions: descriptions.length,
+            projectPath: projectPath,
+        }
+    };
+
+    // Log documentation JSON to console
+    console.log('\n📚 Documentation Extracted (JSON):');
+    console.log('='.repeat(80));
+    console.log(JSON.stringify(documentation, null, 2));
+    console.log('='.repeat(80));
+    console.log(`\n✓ Found ${markdownDocs.length} markdown file(s)`);
+    console.log(`✓ Matched ${markdownDocs.filter(d => d.matchType !== "unmatched").length} to code nodes`);
+    console.log(`✓ Extracted ${descriptions.length} @description comment(s)\n`);
 
     return { nodes, relations };
 }

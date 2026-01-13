@@ -7,7 +7,7 @@ import { ingest } from "./ingest";
 async function main() {
     const projectGitConfig: GitCloneConfig = {
         gitUrl: process.env.GIT_URL,
-        branch: "release/1.0",
+        branch: "dev",
         projectName: "wts-nest-setup",
         username: process.env.GIT_USER_NAME,
         password: process.env.GIT_PASSWORD,
