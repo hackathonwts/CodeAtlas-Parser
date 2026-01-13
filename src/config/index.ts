@@ -5,4 +5,8 @@ export default {
         username: process.env.GRAPH_DB_USER,
         password: process.env.GRAPH_DB_PASSWORD,
     },
+    chromadb: {
+        host: process.env.CHROMA_HOST,
+        port: process.env.CHROMA_PORT,
+    },
 };

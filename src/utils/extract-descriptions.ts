@@ -1,15 +1,7 @@
 import { Project, Node, SyntaxKind } from "ts-morph";
 import { relative, sep } from "path";
 import * as IdGen from "./id-generator.js";
-
-export interface DescriptionDoc {
-    nodeId: string;
-    nodeName: string;
-    nodeKind: string;
-    filePath: string;
-    description: string;
-    fullComment: string;
-}
+import { DescriptionDoc } from "../types/kg.types";
 
 /**
  * Extracts @description comments from code nodes

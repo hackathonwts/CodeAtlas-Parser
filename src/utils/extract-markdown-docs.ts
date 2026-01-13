@@ -1,14 +1,7 @@
 import { readFileSync, readdirSync, statSync } from "fs";
 import { join, basename, dirname, relative, sep } from "path";
-import { KGNode } from "../types/kg.types";
-
-export interface MarkdownDoc {
-    filePath: string;
-    fileName: string;
-    content: string;
-    relatedNodeIds: string[];
-    matchType: "module" | "file" | "unmatched";
-}
+import { KGNode, MarkdownDoc } from "../types/kg.types";
+import { cleanMarkdownForVectorDB, chunkMarkdownText } from "./clean-markdown.js";
 
 /**
  * Extracts markdown documentation files and matches them to code nodes
@@ -25,10 +18,16 @@ export function extractMarkdownDocs(
         const dirPath = dirname(mdFilePath);
         const content = readFileSync(mdFilePath, "utf-8");
 
+        // Clean markdown for vector DB storage
+        const cleanedContent = cleanMarkdownForVectorDB(content);
+        const chunks = chunkMarkdownText(cleanedContent);
+
         const doc: MarkdownDoc = {
             filePath: mdFilePath,
             fileName,
             content,
+            cleanedContent,
+            chunks,
             relatedNodeIds: [],
             matchType: "unmatched",
         };

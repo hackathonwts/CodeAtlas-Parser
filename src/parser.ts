@@ -6,7 +6,7 @@ import { extractStructure } from "./utils/extract-structure";
 import { extractTypeUsage } from "./utils/extract-type-usage";
 import { extractImports } from "./utils/extract-imports";
 import { extractInheritance } from "./utils/extract-inheritance";
-import { KGNode, KGRelation } from "./types/kg.types";
+import { KGNode, KGRelation, Documentation } from "./types/kg.types";
 import { getSubtypeStats } from "./utils/subtype-query.js";
 import { extractMarkdownDocs } from "./utils/extract-markdown-docs.js";
 import { extractDescriptions } from "./utils/extract-descriptions.js";
@@ -57,7 +57,7 @@ import { extractDescriptions } from "./utils/extract-descriptions.js";
  * @param projectPath Path to the TypeScript project root (should contain tsconfig.json)
  * @returns Object containing nodes and relations arrays for the knowledge graph
  */
-export default function parser(projectPath: string): { nodes: KGNode[]; relations: KGRelation[] } {
+export default function parser(projectPath: string): { nodes: KGNode[]; relations: KGRelation[]; documentation: Documentation } {
     const project = new Project({
         tsConfigFilePath: projectPath + "/tsconfig.json",
         skipAddingFilesFromTsConfig: false,
@@ -156,16 +156,8 @@ export default function parser(projectPath: string): { nodes: KGNode[]; relation
         }
     };
 
-    // Log documentation JSON to console
-    console.log('\n📚 Documentation Extracted (JSON):');
-    console.log('='.repeat(80));
-    console.log(JSON.stringify(documentation, null, 2));
-    console.log('='.repeat(80));
-    console.log(`\n✓ Found ${markdownDocs.length} markdown file(s)`);
-    console.log(`✓ Matched ${markdownDocs.filter(d => d.matchType !== "unmatched").length} to code nodes`);
-    console.log(`✓ Extracted ${descriptions.length} @description comment(s)\n`);
 
-    return { nodes, relations };
+    return { nodes, relations, documentation };
 }
 
 function deduplicateRelations(relations: KGRelation[]): KGRelation[] {
