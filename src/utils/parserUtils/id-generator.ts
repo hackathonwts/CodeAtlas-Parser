@@ -1,4 +1,4 @@
-import { NodeKind } from "../types/kg.types.js";
+import { NodeKind } from "../../types/kg.types.js";
 import { createHash } from "crypto";
 
 /**

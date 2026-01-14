@@ -1,5 +1,5 @@
 import { Project } from "ts-morph";
-import { KGNode, KGRelation } from "../types/kg.types";
+import { KGNode, KGRelation } from "../../types/kg.types";
 
 const HTTP_DECORATORS = ["Get", "Post", "Put", "Delete", "Patch"];
 

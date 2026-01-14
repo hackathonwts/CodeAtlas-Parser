@@ -1,15 +1,15 @@
 import { Project } from "ts-morph";
-import { extractDI } from "./utils/extract-di";
-import { extractMethodCalls } from "./utils/extract-method-calls";
-import { extractRoutes } from "./utils/extract-routes";
-import { extractStructure } from "./utils/extract-structure";
-import { extractTypeUsage } from "./utils/extract-type-usage";
-import { extractImports } from "./utils/extract-imports";
-import { extractInheritance } from "./utils/extract-inheritance";
+import { extractDI } from "./utils/parserUtils/extract-di";
+import { extractMethodCalls } from "./utils/parserUtils/extract-method-calls";
+import { extractRoutes } from "./utils/parserUtils/extract-routes";
+import { extractStructure } from "./utils/parserUtils/extract-structure";
+import { extractTypeUsage } from "./utils/parserUtils/extract-type-usage";
+import { extractImports } from "./utils/parserUtils/extract-imports";
+import { extractInheritance } from "./utils/parserUtils/extract-inheritance";
 import { KGNode, KGRelation, Documentation } from "./types/kg.types";
-import { getSubtypeStats } from "./utils/subtype-query.js";
-import { extractMarkdownDocs } from "./utils/extract-markdown-docs.js";
-import { extractDescriptions } from "./utils/extract-descriptions.js";
+import { getSubtypeStats } from "./utils/parserUtils/subtype-query.js";
+import { extractMarkdownDocs } from "./utils/parserUtils/extract-markdown-docs.js";
+import { extractDescriptions } from "./utils/parserUtils/extract-descriptions.js";
 
 /**
  * Main parser function that extracts a comprehensive knowledge graph from a TypeScript project.

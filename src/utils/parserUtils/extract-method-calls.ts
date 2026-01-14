@@ -1,5 +1,5 @@
 import { Project, SyntaxKind, PropertyAccessExpression, Node, SourceFile, ClassDeclaration } from "ts-morph";
-import { KGRelation } from "../types/kg.types";
+import { KGRelation } from "../../types/kg.types";
 import { relative, sep } from "path";
 import * as IdGen from "./id-generator.js";
 

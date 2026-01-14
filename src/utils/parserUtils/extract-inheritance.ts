@@ -1,5 +1,5 @@
 import { Project, SyntaxKind } from "ts-morph";
-import { KGRelation } from "../types/kg.types";
+import { KGRelation } from "../../types/kg.types";
 
 /**
  * Extracts inheritance and implementation relationships.

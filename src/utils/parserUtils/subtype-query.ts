@@ -1,4 +1,4 @@
-import { KGNode } from "../types/kg.types.js";
+import { KGNode } from "../../types/kg.types.js";
 
 /**
  * Filters nodes by file subtype

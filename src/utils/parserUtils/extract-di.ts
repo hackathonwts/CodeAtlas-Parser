@@ -1,5 +1,5 @@
 import { Project } from "ts-morph";
-import { KGRelation } from "../types/kg.types";
+import { KGRelation } from "../../types/kg.types";
 
 export function extractDI(project: Project): KGRelation[] {
     const relations: KGRelation[] = [];

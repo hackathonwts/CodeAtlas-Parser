@@ -1,5 +1,5 @@
 import { Project, SyntaxKind, Node } from "ts-morph";
-import { KGRelation } from "../types/kg.types";
+import { KGRelation } from "../../types/kg.types";
 import { relative, sep } from "path";
 import * as IdGen from "./id-generator.js";
 import { detectFileSubtype } from "./detect-file-subtype.js";

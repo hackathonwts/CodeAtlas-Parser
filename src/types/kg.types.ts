@@ -1,3 +1,7 @@
+import { MarkdownDoc } from "../models/projectMD.model";
+import { DescriptionDoc } from "../models/projectDescriptions.model";
+
+
 export type NodeKind =
     | "File"
     | "Class"
@@ -30,25 +34,6 @@ export interface KGRelation {
     type: string;
 }
 
-// Documentation extraction types
-export interface MarkdownDoc {
-    filePath: string;
-    fileName: string;
-    content: string;              // Original markdown content
-    cleanedContent: string;       // Cleaned text for vector DB
-    chunks: string[];             // Text chunks for embeddings
-    relatedNodeIds: string[];
-    matchType: "module" | "file" | "unmatched";
-}
-
-export interface DescriptionDoc {
-    nodeId: string;
-    nodeName: string;
-    nodeKind: string;
-    filePath: string;
-    description: string;
-    fullComment: string;
-}
 
 export interface Documentation {
     markdown: MarkdownDoc[];

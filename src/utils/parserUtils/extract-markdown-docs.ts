@@ -1,7 +1,8 @@
 import { readFileSync, readdirSync, statSync } from "fs";
 import { join, basename, dirname, relative, sep } from "path";
-import { KGNode, MarkdownDoc } from "../types/kg.types";
+import { KGNode } from "../../types/kg.types";
 import { cleanMarkdownForVectorDB, chunkMarkdownText } from "./clean-markdown.js";
+import { MarkdownDoc } from "../../models/projectMD.model";
 
 /**
  * Extracts markdown documentation files and matches them to code nodes
