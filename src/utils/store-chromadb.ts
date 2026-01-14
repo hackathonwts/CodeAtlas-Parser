@@ -46,7 +46,7 @@ export class ChromaDBManager {
             for (let i = 0; i < markdownDoc.chunks.length; i++) {
                 const chunk = markdownDoc.chunks[i];
 
-                o.push({
+                documents.push({
                     id: `${markdownDoc.fileName}-chunk-${i}`,
                     text: chunk,
                     metadata: {
