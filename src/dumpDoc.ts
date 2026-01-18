@@ -6,6 +6,7 @@ import { MarkdownModel } from "./models/projectMD.model";
 
 export default async function dumpDoc(project: IProject, documentation: Documentation) {
     try {
+        let isDocDumped = false;
         // dump markdowns to db
         if (documentation.markdown.length > 0) {
             const markdowns = documentation.markdown.map((markdown) => {
@@ -17,6 +18,7 @@ export default async function dumpDoc(project: IProject, documentation: Document
             });
             await MarkdownModel.deleteMany({ projectId: project._id });
             await MarkdownModel.insertMany(markdowns);
+            isDocDumped = true;
         }
 
         // dump descriptions to db
@@ -30,6 +32,10 @@ export default async function dumpDoc(project: IProject, documentation: Document
             });
             await DescriptionModel.deleteMany({ projectId: project._id });
             await DescriptionModel.insertMany(descriptions);
+            isDocDumped = true;
+        }
+        if (isDocDumped) {
+            
         }
     } catch (error) {
         throw error;

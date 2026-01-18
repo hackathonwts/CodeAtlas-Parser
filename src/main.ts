@@ -50,5 +50,4 @@ async function main() {
     }
 
 };
-
 main();
