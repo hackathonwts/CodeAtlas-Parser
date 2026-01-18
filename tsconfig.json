@@ -5,8 +5,8 @@
     "rootDir": "./src",
     "outDir": "./dist",
     "paths": {
-      "*": [
-        "../*"
+      "@/*": [
+        "./src/*"
       ]
     },
     // Environment Settings
@@ -32,7 +32,11 @@
     // "noPropertyAccessFromIndexSignature": true,
     "resolveJsonModule": true,
     "removeComments": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "strictPropertyInitialization": false,
+    "moduleResolution": "node"
   },
   "exclude": [
     "node_modules",
