@@ -1,13 +1,13 @@
 import { Global, Module } from '@nestjs/common';
 import { GitCloneQueue } from './git-clone.queue';
 import { MongooseModule } from '@nestjs/mongoose';
-import { Project, ProjectSchema } from 'src/project/schemas/project.schema';
-import { Role, RoleSchema } from 'src/role/schemas/role.schema';
-import { User, UserSchema } from 'src/user/schemas/user.schema';
-import { Policy, PolicySchema } from 'src/policy/schemas/policy.schema';
 import { CodeParserQueue } from './code-parser.queue';
 import { BullModule } from '@nestjs/bullmq';
 import { CODE_PARSER_QUEUE } from './queue.constant';
+import { Project, ProjectSchema } from 'src/modules/project/schemas/project.schema';
+import { Role, RoleSchema } from 'src/modules/role/schemas/role.schema';
+import { User, UserSchema } from 'src/modules/user/schemas/user.schema';
+import { Policy, PolicySchema } from 'src/modules/policy/schemas/policy.schema';
 
 @Global()
 @Module({

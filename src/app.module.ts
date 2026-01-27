@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { ParserModule } from './parser/parser.module';
 import { KafkaModule } from './kafka/kafka.module';
 import { KafkaService } from './kafka/kafka.service';
 import { BullModule } from '@nestjs/bullmq';
@@ -9,6 +8,7 @@ import { Neo4jService } from './neo4j/neo4j.service';
 import { MongooseModule } from '@nestjs/mongoose';
 import { UtilsModule } from './utils/utils.module';
 import { QueuesModule } from './queues/queues.module';
+import { ParserModule } from './modules/parser/parser.module';
 
 @Module({
     imports: [

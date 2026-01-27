@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Schema as MongoSchema, HydratedDocument, Types } from 'mongoose';
-import { User } from 'src/user/schemas/user.schema';
 import type { NotificationTemplateKey } from './notification-template.schema';
+import { User } from 'src/modules/user/schemas/user.schema';
 
 export interface INotification {
     _id?: string;

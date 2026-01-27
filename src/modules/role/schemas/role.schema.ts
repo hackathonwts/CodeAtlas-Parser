@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types } from 'mongoose';
-import { Policy } from 'src/policy/schemas/policy.schema';
+import { Policy } from 'src/modules/policy/schemas/policy.schema';
 
 export enum UserRoleEnum {
     Admin = 'admin',

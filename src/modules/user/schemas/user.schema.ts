@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { compareSync, hashSync, genSaltSync, genSalt, hash } from 'bcrypt';
 import { HydratedDocument, Schema as MongoSchema, Types } from 'mongoose';
-import { Policy, PolicySchema } from 'src/policy/schemas/policy.schema';
+import { Policy, PolicySchema } from 'src/modules/policy/schemas/policy.schema';
 
 export enum UserStatus {
     Active = 'Active',

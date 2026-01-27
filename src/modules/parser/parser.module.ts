@@ -5,11 +5,11 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ConfigService } from '@nestjs/config';
 import { BullModule } from '@nestjs/bullmq';
 import { MongooseModule } from '@nestjs/mongoose';
-import { Project, ProjectSchema } from 'src/project/schemas/project.schema';
-import { Role, RoleSchema } from 'src/role/schemas/role.schema';
-import { User, UserSchema } from 'src/user/schemas/user.schema';
-import { Policy, PolicySchema } from 'src/policy/schemas/policy.schema';
 import { GIT_CLONE_QUEUE } from 'src/queues/queue.constant';
+import { Project, ProjectSchema } from '../project/schemas/project.schema';
+import { Role, RoleSchema } from '../role/schemas/role.schema';
+import { User, UserSchema } from '../user/schemas/user.schema';
+import { Policy, PolicySchema } from '../policy/schemas/policy.schema';
 
 export const PARSER_SERVICE = 'PARSER_SERVICE';
 @Module({

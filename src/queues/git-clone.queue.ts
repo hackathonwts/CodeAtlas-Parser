@@ -3,9 +3,9 @@ import { Job, Queue } from 'bullmq';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { CODE_PARSER_QUEUE, GIT_CLONE_QUEUE } from 'src/queues/queue.constant';
-import { Project, ProjectDocument } from 'src/project/schemas/project.schema';
 import { GitUtils } from 'src/utils/git.utils';
 import { HelperUtils } from 'src/utils/helper.utils';
+import { Project, ProjectDocument } from 'src/modules/project/schemas/project.schema';
 
 @Processor(GIT_CLONE_QUEUE)
 export class GitCloneQueue extends WorkerHost {
