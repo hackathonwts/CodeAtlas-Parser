@@ -6,12 +6,22 @@ import { KafkaService } from './kafka/kafka.service';
 import { BullModule } from '@nestjs/bullmq';
 import { Neo4jModule } from './neo4j/neo4j.module';
 import { Neo4jService } from './neo4j/neo4j.service';
+import { MongooseModule } from '@nestjs/mongoose';
+import { UtilsModule } from './utils/utils.module';
 
 @Module({
     imports: [
         ConfigModule.forRoot({
             isGlobal: true,
             envFilePath: '.env.development',
+        }),
+        MongooseModule.forRootAsync({
+            imports: [ConfigModule],
+            useFactory: async (configService: ConfigService) => ({
+                uri: configService.get<string>('MONGODB_URI'),
+                dbName: configService.get<string>('MONGODB_DB_NAME'),
+            }),
+            inject: [ConfigService],
         }),
         KafkaModule.registerAsync({
             useFactory: (configService: ConfigService) => ({
@@ -40,10 +50,11 @@ import { Neo4jService } from './neo4j/neo4j.service';
             inject: [ConfigService],
         }),
         ParserModule,
+        UtilsModule
     ],
     providers: [
         KafkaService,
-        Neo4jService
+        Neo4jService,
     ],
 })
-export class AppModule {}
+export class AppModule { }
