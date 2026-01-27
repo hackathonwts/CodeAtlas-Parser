@@ -8,6 +8,7 @@ import { Project, ProjectSchema } from 'src/modules/project/schemas/project.sche
 import { Role, RoleSchema } from 'src/modules/role/schemas/role.schema';
 import { User, UserSchema } from 'src/modules/user/schemas/user.schema';
 import { Policy, PolicySchema } from 'src/modules/policy/schemas/policy.schema';
+import { ParserModule } from '../modules/parser/parser.module';
 
 @Global()
 @Module({
@@ -19,6 +20,7 @@ import { Policy, PolicySchema } from 'src/modules/policy/schemas/policy.schema';
             { name: Policy.name, schema: PolicySchema },
         ]),
         BullModule.registerQueue({ name: CODE_PARSER_QUEUE }),
+        ParserModule, // Import parser module to access ParserService
     ],
     providers: [
         GitCloneQueue,
