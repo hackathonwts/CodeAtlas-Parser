@@ -1,1 +1,2 @@
 export const PARSER_SERVICE = 'PARSER_SERVICE';
+export const PARSER_QUEUE = 'PARSER_QUEUE';

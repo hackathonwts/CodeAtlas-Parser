@@ -11,10 +11,9 @@ async function bootstrap() {
                 brokers: [process.env.KAFKA_BROKER_URL!],
             },
             producer: {
-                createPartitioner: Partitioners.DefaultPartitioner
-            }
+                createPartitioner: Partitioners.DefaultPartitioner,
+            },
         },
-
     });
 
     app.listen();

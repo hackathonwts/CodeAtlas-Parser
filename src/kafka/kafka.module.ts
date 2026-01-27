@@ -4,7 +4,7 @@ import { Kafka, KafkaConfig } from 'kafkajs';
 import { KAFKA_CLIENT } from './kafka.constants';
 import { KafkaClient } from './kafka.type';
 
-export interface KafkaModuleOptions extends KafkaConfig { }
+export interface KafkaModuleOptions extends KafkaConfig {}
 
 export interface KafkaModuleAsyncOptions {
     useFactory: (configService: ConfigService) => Promise<KafkaModuleOptions> | KafkaModuleOptions;

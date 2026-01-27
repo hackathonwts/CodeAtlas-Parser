@@ -6,13 +6,10 @@ import { KAFKA_TOPICS } from 'src/kafka/kafka.topics';
 
 @Controller()
 export class ParserController {
-    constructor(
-        private readonly parserService: ParserService,
-    ) { }
+    constructor(private readonly parserService: ParserService) {}
 
     @EventPattern(KAFKA_TOPICS.PARSER_CREATE.topic)
     async handleCreateParser(@Payload() message: CreateParserDto) {
         await this.parserService.handleCreateParser(message);
     }
-
 }

@@ -1,4 +1,4 @@
-import { Admin, Kafka, Producer } from "kafkajs";
+import { Admin, Kafka, Producer } from 'kafkajs';
 
 export type KafkaClient = {
     client: Kafka;
