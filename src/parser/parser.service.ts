@@ -10,6 +10,6 @@ export class ParserService {
 
     async handleCreateParser(message: CreateParserDto) {
         console.log('Received create_parser message:', message);
-        this.gitCloneQueue.add('create', message);
+        this.gitCloneQueue.add('start.clone', message);
     }
 }

@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
 import { GitCloneQueue } from './git-clone.queue';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Project, ProjectSchema } from 'src/project/schemas/project.schema';
@@ -9,6 +9,7 @@ import { CodeParserQueue } from './code-parser.queue';
 import { BullModule } from '@nestjs/bullmq';
 import { CODE_PARSER_QUEUE } from './queue.constant';
 
+@Global()
 @Module({
     imports: [
         MongooseModule.forFeature([
