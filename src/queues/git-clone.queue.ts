@@ -1,19 +1,19 @@
-import { Processor, WorkerHost } from '@nestjs/bullmq';
-import { Job } from 'bullmq';
-import { PARSER_QUEUE } from './parser.constant';
+import { InjectQueue, Processor, WorkerHost } from '@nestjs/bullmq';
+import { Job, Queue } from 'bullmq';
 import { Model } from 'mongoose';
-import { Project, ProjectDocument } from 'src/project/schemas/project.schema';
 import { InjectModel } from '@nestjs/mongoose';
-import simpleGit, { SimpleGit } from 'simple-git';
 import { join } from 'path';
 import { existsSync, mkdirSync, rmSync } from 'fs';
+import { CODE_PARSER_QUEUE, GIT_CLONE_QUEUE } from 'src/queues/queue.constant';
+import { Project, ProjectDocument } from 'src/project/schemas/project.schema';
 import { GitUtils } from 'src/utils/git.utils';
 
-@Processor(PARSER_QUEUE)
-export class ParseQueue extends WorkerHost {
+@Processor(GIT_CLONE_QUEUE)
+export class GitCloneQueue extends WorkerHost {
     project_path: string;
 
     constructor(
+        @InjectQueue(CODE_PARSER_QUEUE) private codeParserQueue: Queue,
         @InjectModel(Project.name) private readonly projectModel: Model<ProjectDocument>,
         private readonly gitUtils: GitUtils
     ) {
@@ -49,7 +49,10 @@ export class ParseQueue extends WorkerHost {
                     target_project_path: target_project_path
                 });
 
-                // Queue For Parsing
+                await this.codeParserQueue.add('start', {
+                    _id: project._id,
+                    project_path: target_project_path
+                });
             }
         } catch (error) {
             console.error(error);

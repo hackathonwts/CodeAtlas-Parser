@@ -2,16 +2,16 @@ import { Module } from '@nestjs/common';
 import { ParserService } from './parser.service';
 import { ParserController } from './parser.controller';
 import { ClientsModule, Transport } from '@nestjs/microservices';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { PARSER_QUEUE, PARSER_SERVICE } from './parser.constant';
+import { ConfigService } from '@nestjs/config';
 import { BullModule } from '@nestjs/bullmq';
-import { ParseQueue } from './parse.queue';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Project, ProjectSchema } from 'src/project/schemas/project.schema';
 import { Role, RoleSchema } from 'src/role/schemas/role.schema';
 import { User, UserSchema } from 'src/user/schemas/user.schema';
 import { Policy, PolicySchema } from 'src/policy/schemas/policy.schema';
+import { GIT_CLONE_QUEUE } from 'src/queues/queue.constant';
 
+export const PARSER_SERVICE = 'PARSER_SERVICE';
 @Module({
     imports: [
         ClientsModule.registerAsync([
@@ -32,7 +32,7 @@ import { Policy, PolicySchema } from 'src/policy/schemas/policy.schema';
                 inject: [ConfigService],
             },
         ]),
-        BullModule.registerQueue({ name: PARSER_QUEUE }),
+        BullModule.registerQueue({ name: GIT_CLONE_QUEUE }),
         MongooseModule.forFeature([
             { name: Project.name, schema: ProjectSchema },
             { name: Role.name, schema: RoleSchema },
@@ -41,6 +41,6 @@ import { Policy, PolicySchema } from 'src/policy/schemas/policy.schema';
         ]),
     ],
     controllers: [ParserController],
-    providers: [ParserService, ParseQueue],
+    providers: [ParserService],
 })
 export class ParserModule { }

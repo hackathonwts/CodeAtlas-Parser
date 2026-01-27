@@ -8,6 +8,7 @@ import { Neo4jModule } from './neo4j/neo4j.module';
 import { Neo4jService } from './neo4j/neo4j.service';
 import { MongooseModule } from '@nestjs/mongoose';
 import { UtilsModule } from './utils/utils.module';
+import { QueuesModule } from './queues/queues.module';
 
 @Module({
     imports: [
@@ -50,7 +51,8 @@ import { UtilsModule } from './utils/utils.module';
             inject: [ConfigService],
         }),
         ParserModule,
-        UtilsModule
+        UtilsModule,
+        QueuesModule
     ],
     providers: [
         KafkaService,

@@ -1,0 +1,2 @@
+export const GIT_CLONE_QUEUE = 'GIT_CLONE_QUEUE';
+export const CODE_PARSER_QUEUE = 'CODE_PARSER_QUEUE';
