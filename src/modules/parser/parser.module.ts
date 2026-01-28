@@ -10,6 +10,7 @@ import { Project, ProjectSchema } from '../project/schemas/project.schema';
 import { Role, RoleSchema } from '../role/schemas/role.schema';
 import { User, UserSchema } from '../user/schemas/user.schema';
 import { Policy, PolicySchema } from '../policy/schemas/policy.schema';
+import { OrchestratorModule } from '../orchestrator/orchestrator.module';
 
 export const PARSER_SERVICE = 'PARSER_SERVICE';
 @Module({
@@ -39,6 +40,7 @@ export const PARSER_SERVICE = 'PARSER_SERVICE';
             { name: User.name, schema: UserSchema },
             { name: Policy.name, schema: PolicySchema },
         ]),
+        OrchestratorModule,
     ],
     controllers: [ParserController],
     providers: [ParserService],
