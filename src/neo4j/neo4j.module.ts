@@ -27,7 +27,7 @@ export class Neo4jModule {
                         return driver;
                     },
                     inject: [NEO4J_OPTIONS],
-                }
+                },
             ],
             exports: [NEO4J_DRIVER, NEO4J_OPTIONS],
         };

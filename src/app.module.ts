@@ -52,11 +52,8 @@ import { ParserModule } from './modules/parser/parser.module';
         }),
         ParserModule,
         UtilsModule,
-        QueuesModule
+        QueuesModule,
     ],
-    providers: [
-        KafkaService,
-        Neo4jService,
-    ],
+    providers: [KafkaService, Neo4jService],
 })
-export class AppModule { }
+export class AppModule {}

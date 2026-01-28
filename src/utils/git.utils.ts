@@ -1,7 +1,7 @@
-import { Injectable } from "@nestjs/common";
-import { existsSync, rmSync, mkdirSync } from "fs";
-import { join, dirname } from "path";
-import simpleGit, { SimpleGit } from "simple-git";
+import { Injectable } from '@nestjs/common';
+import { existsSync, rmSync, mkdirSync } from 'fs';
+import { join, dirname } from 'path';
+import simpleGit, { SimpleGit } from 'simple-git';
 import { GitCloneConfig, GitCloneResult } from '../interfaces/git.interfaces';
 
 @Injectable()

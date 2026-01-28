@@ -1,37 +1,37 @@
-import { Project, SyntaxKind } from "ts-morph";
-import { KGNode, KGRelation } from "../../types/kg.types";
-import { relative, sep } from "path";
+import { Project, SyntaxKind } from 'ts-morph';
+import { KGNode, KGRelation } from '../../types/kg.types';
+import { relative, sep } from 'path';
 
 export function extractStructure(project: Project): { nodes: KGNode[]; relations: KGRelation[] } {
     const nodes: KGNode[] = [];
     const relations: KGRelation[] = [];
 
-    const srcDir = project.getDirectories().find(d => d.getPath().endsWith(`${sep}src`));
-    if (!srcDir) throw new Error("src directory not found");
+    const srcDir = project.getDirectories().find((d) => d.getPath().endsWith(`${sep}src`));
+    if (!srcDir) throw new Error('src directory not found');
 
     const srcRoot = srcDir.getPath();
 
-    project.getSourceFiles().forEach(file => {
+    project.getSourceFiles().forEach((file) => {
         const absolutePath = file.getFilePath();
-        const relativePath = `src/${relative(srcRoot, absolutePath).split(sep).join("/")}`;
+        const relativePath = `src/${relative(srcRoot, absolutePath).split(sep).join('/')}`;
         const fileId = `file:${relativePath}`;
 
         // Add File node
         nodes.push({
             id: fileId,
-            kind: "File",
+            kind: 'File',
             name: file.getBaseName(),
             filePath: relativePath,
         });
 
         // Extract Classes and their members
-        file.getClasses().forEach(cls => {
-            const className = cls.getName() || "AnonymousClass";
+        file.getClasses().forEach((cls) => {
+            const className = cls.getName() || 'AnonymousClass';
             const classId = `class:${className}`;
 
             nodes.push({
                 id: classId,
-                kind: "Class",
+                kind: 'Class',
                 name: className,
                 filePath: relativePath,
             });
@@ -39,17 +39,17 @@ export function extractStructure(project: Project): { nodes: KGNode[]; relations
             relations.push({
                 from: fileId,
                 to: classId,
-                type: "DECLARES",
+                type: 'DECLARES',
             });
 
             // Extract Methods
-            cls.getMethods().forEach(method => {
+            cls.getMethods().forEach((method) => {
                 const methodName = method.getName();
                 const methodId = `method:${className}.${methodName}`;
 
                 nodes.push({
                     id: methodId,
-                    kind: "Method",
+                    kind: 'Method',
                     name: methodName,
                     parentId: classId,
                     filePath: relativePath,
@@ -57,8 +57,8 @@ export function extractStructure(project: Project): { nodes: KGNode[]; relations
                         isAsync: method.isAsync(),
                         isStatic: method.isStatic(),
                         visibility: method.getScope(),
-                        returnType: method.getReturnType()?.getText() || "void",
-                        parameters: method.getParameters().map(p => ({
+                        returnType: method.getReturnType()?.getText() || 'void',
+                        parameters: method.getParameters().map((p) => ({
                             name: p.getName(),
                             type: p.getType().getText(),
                         })),
@@ -68,18 +68,18 @@ export function extractStructure(project: Project): { nodes: KGNode[]; relations
                 relations.push({
                     from: classId,
                     to: methodId,
-                    type: "HAS_METHOD",
+                    type: 'HAS_METHOD',
                 });
 
                 // Extract method parameters as nodes
-                method.getParameters().forEach(param => {
+                method.getParameters().forEach((param) => {
                     const paramName = param.getName();
                     const paramType = param.getType().getText();
                     const paramId = `param:${className}.${methodName}.${paramName}`;
 
                     nodes.push({
                         id: paramId,
-                        kind: "Parameter",
+                        kind: 'Parameter',
                         name: paramName,
                         parentId: methodId,
                         meta: {
@@ -90,7 +90,7 @@ export function extractStructure(project: Project): { nodes: KGNode[]; relations
                     relations.push({
                         from: methodId,
                         to: paramId,
-                        type: "HAS_PARAMETER",
+                        type: 'HAS_PARAMETER',
                     });
 
                     // Check if parameter type references a known type (class, interface, enum)
@@ -104,25 +104,25 @@ export function extractStructure(project: Project): { nodes: KGNode[]; relations
                                 relations.push({
                                     from: paramId,
                                     to: `class:${typeName}`,
-                                    type: "USES_TYPE",
+                                    type: 'USES_TYPE',
                                 });
                             } else if (typeKind === SyntaxKind.InterfaceDeclaration) {
                                 relations.push({
                                     from: paramId,
                                     to: `interface:${typeName}`,
-                                    type: "USES_TYPE",
+                                    type: 'USES_TYPE',
                                 });
                             } else if (typeKind === SyntaxKind.EnumDeclaration) {
                                 relations.push({
                                     from: paramId,
                                     to: `enum:${typeName}`,
-                                    type: "USES_TYPE",
+                                    type: 'USES_TYPE',
                                 });
                             } else if (typeKind === SyntaxKind.TypeAliasDeclaration) {
                                 relations.push({
                                     from: paramId,
                                     to: `type:${typeName}`,
-                                    type: "USES_TYPE",
+                                    type: 'USES_TYPE',
                                 });
                             }
                         }
@@ -131,18 +131,18 @@ export function extractStructure(project: Project): { nodes: KGNode[]; relations
             });
 
             // Extract Properties
-            cls.getProperties().forEach(prop => {
+            cls.getProperties().forEach((prop) => {
                 const propName = prop.getName();
                 const propId = `property:${className}.${propName}`;
 
                 nodes.push({
                     id: propId,
-                    kind: "Property",
+                    kind: 'Property',
                     name: propName,
                     parentId: classId,
                     filePath: relativePath,
                     meta: {
-                        type: prop.getType()?.getText() || "any",
+                        type: prop.getType()?.getText() || 'any',
                         isStatic: prop.isStatic(),
                         visibility: prop.getScope(),
                     },
@@ -151,7 +151,7 @@ export function extractStructure(project: Project): { nodes: KGNode[]; relations
                 relations.push({
                     from: classId,
                     to: propId,
-                    type: "HAS_PROPERTY",
+                    type: 'HAS_PROPERTY',
                 });
 
                 // Check if property type references a known type
@@ -165,19 +165,19 @@ export function extractStructure(project: Project): { nodes: KGNode[]; relations
                             relations.push({
                                 from: propId,
                                 to: `class:${typeName}`,
-                                type: "USES_TYPE",
+                                type: 'USES_TYPE',
                             });
                         } else if (typeKind === SyntaxKind.InterfaceDeclaration) {
                             relations.push({
                                 from: propId,
                                 to: `interface:${typeName}`,
-                                type: "USES_TYPE",
+                                type: 'USES_TYPE',
                             });
                         } else if (typeKind === SyntaxKind.EnumDeclaration) {
                             relations.push({
                                 from: propId,
                                 to: `enum:${typeName}`,
-                                type: "USES_TYPE",
+                                type: 'USES_TYPE',
                             });
                         }
                     }
@@ -186,20 +186,20 @@ export function extractStructure(project: Project): { nodes: KGNode[]; relations
         });
 
         // Extract standalone Functions
-        file.getFunctions().forEach(func => {
-            const funcName = func.getName() || "anonymous";
+        file.getFunctions().forEach((func) => {
+            const funcName = func.getName() || 'anonymous';
             const funcId = `function:${relativePath}:${funcName}`;
 
             nodes.push({
                 id: funcId,
-                kind: "Function",
+                kind: 'Function',
                 name: funcName,
                 filePath: relativePath,
                 meta: {
                     isAsync: func.isAsync(),
                     isExported: func.isExported(),
-                    returnType: func.getReturnType()?.getText() || "void",
-                    parameters: func.getParameters().map(p => ({
+                    returnType: func.getReturnType()?.getText() || 'void',
+                    parameters: func.getParameters().map((p) => ({
                         name: p.getName(),
                         type: p.getType().getText(),
                     })),
@@ -209,23 +209,23 @@ export function extractStructure(project: Project): { nodes: KGNode[]; relations
             relations.push({
                 from: fileId,
                 to: funcId,
-                type: "DECLARES",
+                type: 'DECLARES',
             });
         });
 
         // Extract Interfaces
-        file.getInterfaces().forEach(iface => {
+        file.getInterfaces().forEach((iface) => {
             const ifaceName = iface.getName();
             const ifaceId = `interface:${ifaceName}`;
 
             nodes.push({
                 id: ifaceId,
-                kind: "Interface",
+                kind: 'Interface',
                 name: ifaceName,
                 filePath: relativePath,
                 meta: {
                     isExported: iface.isExported(),
-                    properties: iface.getProperties().map(p => ({
+                    properties: iface.getProperties().map((p) => ({
                         name: p.getName(),
                         type: p.getType().getText(),
                     })),
@@ -235,28 +235,28 @@ export function extractStructure(project: Project): { nodes: KGNode[]; relations
             relations.push({
                 from: fileId,
                 to: ifaceId,
-                type: "DECLARES",
+                type: 'DECLARES',
             });
 
             // Interface extends relationships
-            iface.getExtends().forEach(ext => {
+            iface.getExtends().forEach((ext) => {
                 const extName = ext.getExpression().getText();
                 relations.push({
                     from: ifaceId,
                     to: `interface:${extName}`,
-                    type: "EXTENDS",
+                    type: 'EXTENDS',
                 });
             });
         });
 
         // Extract Enums
-        file.getEnums().forEach(enumDecl => {
+        file.getEnums().forEach((enumDecl) => {
             const enumName = enumDecl.getName();
             const enumId = `enum:${enumName}`;
 
             nodes.push({
                 id: enumId,
-                kind: "Enum",
+                kind: 'Enum',
                 name: enumName,
                 filePath: relativePath,
                 meta: {
@@ -267,17 +267,17 @@ export function extractStructure(project: Project): { nodes: KGNode[]; relations
             relations.push({
                 from: fileId,
                 to: enumId,
-                type: "DECLARES",
+                type: 'DECLARES',
             });
 
             // Extract Enum Members
-            enumDecl.getMembers().forEach(member => {
+            enumDecl.getMembers().forEach((member) => {
                 const memberName = member.getName();
                 const memberId = `enumMember:${enumName}.${memberName}`;
 
                 nodes.push({
                     id: memberId,
-                    kind: "EnumMember",
+                    kind: 'EnumMember',
                     name: memberName,
                     parentId: enumId,
                     meta: {
@@ -288,19 +288,19 @@ export function extractStructure(project: Project): { nodes: KGNode[]; relations
                 relations.push({
                     from: enumId,
                     to: memberId,
-                    type: "HAS_MEMBER",
+                    type: 'HAS_MEMBER',
                 });
             });
         });
 
         // Extract Type Aliases
-        file.getTypeAliases().forEach(typeAlias => {
+        file.getTypeAliases().forEach((typeAlias) => {
             const typeName = typeAlias.getName();
             const typeId = `type:${typeName}`;
 
             nodes.push({
                 id: typeId,
-                kind: "TypeAlias",
+                kind: 'TypeAlias',
                 name: typeName,
                 filePath: relativePath,
                 meta: {
@@ -312,24 +312,24 @@ export function extractStructure(project: Project): { nodes: KGNode[]; relations
             relations.push({
                 from: fileId,
                 to: typeId,
-                type: "DECLARES",
+                type: 'DECLARES',
             });
         });
 
         // Extract Variable Declarations (const, let, var)
-        file.getVariableStatements().forEach(varStmt => {
-            varStmt.getDeclarations().forEach(varDecl => {
+        file.getVariableStatements().forEach((varStmt) => {
+            varStmt.getDeclarations().forEach((varDecl) => {
                 const varName = varDecl.getName();
                 const varId = `variable:${relativePath}:${varName}`;
 
                 nodes.push({
                     id: varId,
-                    kind: "Variable",
+                    kind: 'Variable',
                     name: varName,
                     filePath: relativePath,
                     meta: {
                         isExported: varStmt.isExported(),
-                        type: varDecl.getType()?.getText() || "any",
+                        type: varDecl.getType()?.getText() || 'any',
                         declarationType: varStmt.getDeclarationKind(),
                     },
                 });
@@ -337,7 +337,7 @@ export function extractStructure(project: Project): { nodes: KGNode[]; relations
                 relations.push({
                     from: fileId,
                     to: varId,
-                    type: "DECLARES",
+                    type: 'DECLARES',
                 });
             });
         });

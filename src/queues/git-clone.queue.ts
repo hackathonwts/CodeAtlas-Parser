@@ -11,13 +11,13 @@ export class GitCloneQueue extends WorkerHost {
     constructor(
         @InjectQueue(CODE_PARSER_QUEUE) private codeParserQueue: Queue,
         @InjectModel(Project.name) private readonly projectModel: Model<ProjectDocument>,
-        private readonly gitUtils: GitUtils
+        private readonly gitUtils: GitUtils,
     ) {
         super();
     }
 
     async process(job: Job<any, any, string>, token?: string): Promise<any> {
-        console.log("Processing job:", job.id, "with data:", job.data, "and token:", token);
+        console.log('Processing job:', job.id, 'with data:', job.data, 'and token:', token);
         try {
             const project = await this.projectModel.findById(job.data._id);
             if (project?.git_link && project?.git_username && project?.git_password) {
@@ -33,7 +33,7 @@ export class GitCloneQueue extends WorkerHost {
                     await this.codeParserQueue.add('start.parsing', {
                         _id: project._id,
                         project_path: result.clonedPath,
-                        project_name: project.title
+                        project_name: project.title,
                     });
                 } else {
                     throw new Error(`Failed to clone repository: ${result.message}`);

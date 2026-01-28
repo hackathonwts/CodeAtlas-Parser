@@ -60,12 +60,12 @@ export class Neo4jService implements OnModuleDestroy {
      * Creates the database if it doesn't exist
      */
     async createDatabaseIfNotExists(databaseName: string): Promise<void> {
-        const session = this.getSession("system");
+        const session = this.getSession('system');
         try {
             await session.run(`CREATE DATABASE \`${databaseName}\` IF NOT EXISTS`);
             await this.waitForDatabaseReady(databaseName);
         } catch (error: any) {
-            if (error.code !== "Neo.ClientError.Database.DatabaseAlreadyExists") {
+            if (error.code !== 'Neo.ClientError.Database.DatabaseAlreadyExists') {
                 throw error;
             }
         } finally {
@@ -81,7 +81,7 @@ export class Neo4jService implements OnModuleDestroy {
             try {
                 const session = this.getSession(databaseName);
                 try {
-                    await session.run("RETURN 1");
+                    await session.run('RETURN 1');
                     return;
                 } finally {
                     await session.close();
@@ -90,7 +90,7 @@ export class Neo4jService implements OnModuleDestroy {
                 if (i === maxRetries - 1) {
                     throw new Error(`Database '${databaseName}' did not become ready in time.`);
                 }
-                await new Promise(resolve => setTimeout(resolve, delayMs));
+                await new Promise((resolve) => setTimeout(resolve, delayMs));
             }
         }
     }
@@ -99,7 +99,7 @@ export class Neo4jService implements OnModuleDestroy {
      * Cleans the entire database by deleting all nodes and relationships
      */
     async cleanDatabase(databaseName: string): Promise<void> {
-        await this.write("MATCH (n) DETACH DELETE n", {}, databaseName);
+        await this.write('MATCH (n) DETACH DELETE n', {}, databaseName);
     }
 
     /**

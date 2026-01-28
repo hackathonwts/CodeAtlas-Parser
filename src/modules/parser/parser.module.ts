@@ -43,4 +43,4 @@ export const PARSER_SERVICE = 'PARSER_SERVICE';
     controllers: [ParserController],
     providers: [ParserService],
 })
-export class ParserModule { }
+export class ParserModule {}

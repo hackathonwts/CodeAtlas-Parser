@@ -1,36 +1,34 @@
-import { Project, SyntaxKind, Node, Type } from "ts-morph";
-import { KGRelation } from "../../types/kg.types";
-import { relative, sep } from "path";
+import { Project, SyntaxKind, Node, Type } from 'ts-morph';
+import { KGRelation } from '../../types/kg.types';
+import { relative, sep } from 'path';
 
 /**
- * Extracts type usage relationships - tracks when methods/functions use 
+ * Extracts type usage relationships - tracks when methods/functions use
  * models, entities, interfaces, enums, etc.
- * 
+ *
  * Example: findUser() uses UserModel, RolesEnum -> creates USES_MODEL, USES_ENUM relationships
  */
 export function extractTypeUsage(project: Project): KGRelation[] {
     const relations: KGRelation[] = [];
-    const srcDir = project.getDirectories().find(d => d.getPath().endsWith(`${sep}src`));
-    const srcRoot = srcDir?.getPath() || "";
+    const srcDir = project.getDirectories().find((d) => d.getPath().endsWith(`${sep}src`));
+    const srcRoot = srcDir?.getPath() || '';
 
-    project.getSourceFiles().forEach(file => {
-        const relativePath = srcRoot
-            ? `src/${relative(srcRoot, file.getFilePath()).split(sep).join("/")}`
-            : file.getFilePath();
+    project.getSourceFiles().forEach((file) => {
+        const relativePath = srcRoot ? `src/${relative(srcRoot, file.getFilePath()).split(sep).join('/')}` : file.getFilePath();
 
         // Process class methods
-        file.getClasses().forEach(cls => {
+        file.getClasses().forEach((cls) => {
             const className = cls.getName();
             if (!className) return;
 
-            cls.getMethods().forEach(method => {
+            cls.getMethods().forEach((method) => {
                 const methodId = `method:${className}.${method.getName()}`;
                 extractTypesFromNode(method, methodId, relations);
             });
         });
 
         // Process standalone functions
-        file.getFunctions().forEach(func => {
+        file.getFunctions().forEach((func) => {
             const funcName = func.getName();
             if (!funcName) return;
             const funcId = `function:${relativePath}:${funcName}`;
@@ -45,7 +43,7 @@ function extractTypesFromNode(node: Node, fromId: string, relations: KGRelation[
     // Get all type references within the node
     const typeRefs = node.getDescendantsOfKind(SyntaxKind.TypeReference);
 
-    typeRefs.forEach(typeRef => {
+    typeRefs.forEach((typeRef) => {
         const typeName = typeRef.getTypeName();
         if (Node.isIdentifier(typeName)) {
             const symbol = typeName.getSymbol();
@@ -58,7 +56,7 @@ function extractTypesFromNode(node: Node, fromId: string, relations: KGRelation[
     // Get all identifiers and check if they reference types we care about
     const identifiers = node.getDescendantsOfKind(SyntaxKind.Identifier);
 
-    identifiers.forEach(identifier => {
+    identifiers.forEach((identifier) => {
         const symbol = identifier.getSymbol();
         if (!symbol) return;
 
@@ -73,7 +71,7 @@ function extractTypesFromNode(node: Node, fromId: string, relations: KGRelation[
             addUniqueRelation(relations, {
                 from: fromId,
                 to: `class:${identText}`,
-                type: "USES_MODEL",
+                type: 'USES_MODEL',
             });
             return;
         }
@@ -83,7 +81,7 @@ function extractTypesFromNode(node: Node, fromId: string, relations: KGRelation[
             addUniqueRelation(relations, {
                 from: fromId,
                 to: `enum:${symbol.getName()}`,
-                type: "USES_ENUM",
+                type: 'USES_ENUM',
             });
         }
         // Check for interface access
@@ -91,7 +89,7 @@ function extractTypesFromNode(node: Node, fromId: string, relations: KGRelation[
             addUniqueRelation(relations, {
                 from: fromId,
                 to: `interface:${symbol.getName()}`,
-                type: "USES_INTERFACE",
+                type: 'USES_INTERFACE',
             });
         }
         // Check for type alias access
@@ -99,7 +97,7 @@ function extractTypesFromNode(node: Node, fromId: string, relations: KGRelation[
             addUniqueRelation(relations, {
                 from: fromId,
                 to: `type:${symbol.getName()}`,
-                type: "USES_TYPE",
+                type: 'USES_TYPE',
             });
         }
     });
@@ -107,7 +105,7 @@ function extractTypesFromNode(node: Node, fromId: string, relations: KGRelation[
     // Process property accesses that might be using models/repositories
     const propAccesses = node.getDescendantsOfKind(SyntaxKind.PropertyAccessExpression);
 
-    propAccesses.forEach(propAccess => {
+    propAccesses.forEach((propAccess) => {
         const expression = propAccess.getExpression();
 
         // Check if this is accessing a model/repository
@@ -133,7 +131,7 @@ function extractTypesFromNode(node: Node, fromId: string, relations: KGRelation[
                             addUniqueRelation(relations, {
                                 from: fromId,
                                 to: `class:${typeName}`,
-                                type: "USES_MODEL",
+                                type: 'USES_MODEL',
                             });
                         }
                     }
@@ -145,7 +143,7 @@ function extractTypesFromNode(node: Node, fromId: string, relations: KGRelation[
     // Extract new expressions (e.g., new UserDto(), new UserEntity())
     const newExpressions = node.getDescendantsOfKind(SyntaxKind.NewExpression);
 
-    newExpressions.forEach(newExpr => {
+    newExpressions.forEach((newExpr) => {
         const expression = newExpr.getExpression();
         if (Node.isIdentifier(expression)) {
             const className = expression.getText();
@@ -154,9 +152,7 @@ function extractTypesFromNode(node: Node, fromId: string, relations: KGRelation[
             if (symbol) {
                 const decl = symbol.getDeclarations()?.[0];
                 if (decl && decl.getKind() === SyntaxKind.ClassDeclaration) {
-                    const relationType = isEntityPattern(className) || isModelPattern(className)
-                        ? "CREATES_MODEL"
-                        : "CREATES_INSTANCE";
+                    const relationType = isEntityPattern(className) || isModelPattern(className) ? 'CREATES_MODEL' : 'CREATES_INSTANCE';
 
                     addUniqueRelation(relations, {
                         from: fromId,
@@ -177,34 +173,29 @@ function processTypeSymbol(symbol: any, fromId: string, relations: KGRelation[])
     const typeName = symbol.getName();
 
     if (kind === SyntaxKind.ClassDeclaration) {
-        const relationType = isEntityPattern(typeName) || isModelPattern(typeName)
-            ? "USES_MODEL"
-            : "USES_CLASS";
+        const relationType = isEntityPattern(typeName) || isModelPattern(typeName) ? 'USES_MODEL' : 'USES_CLASS';
         addUniqueRelation(relations, {
             from: fromId,
             to: `class:${typeName}`,
             type: relationType,
         });
-    }
-    else if (kind === SyntaxKind.InterfaceDeclaration) {
+    } else if (kind === SyntaxKind.InterfaceDeclaration) {
         addUniqueRelation(relations, {
             from: fromId,
             to: `interface:${typeName}`,
-            type: "USES_INTERFACE",
+            type: 'USES_INTERFACE',
         });
-    }
-    else if (kind === SyntaxKind.EnumDeclaration) {
+    } else if (kind === SyntaxKind.EnumDeclaration) {
         addUniqueRelation(relations, {
             from: fromId,
             to: `enum:${typeName}`,
-            type: "USES_ENUM",
+            type: 'USES_ENUM',
         });
-    }
-    else if (kind === SyntaxKind.TypeAliasDeclaration) {
+    } else if (kind === SyntaxKind.TypeAliasDeclaration) {
         addUniqueRelation(relations, {
             from: fromId,
             to: `type:${typeName}`,
-            type: "USES_TYPE",
+            type: 'USES_TYPE',
         });
     }
 }
@@ -217,14 +208,14 @@ function checkTypeForModels(type: Type, fromId: string, relations: KGRelation[])
             addUniqueRelation(relations, {
                 from: fromId,
                 to: `class:${typeName}`,
-                type: "USES_MODEL",
+                type: 'USES_MODEL',
             });
         }
     }
 
     // Check generic type arguments (e.g., Repository<User>)
     const typeArgs = type.getTypeArguments();
-    typeArgs.forEach(argType => {
+    typeArgs.forEach((argType) => {
         const argSymbol = argType.getSymbol();
         if (argSymbol) {
             const argTypeName = argSymbol.getName();
@@ -232,7 +223,7 @@ function checkTypeForModels(type: Type, fromId: string, relations: KGRelation[])
                 addUniqueRelation(relations, {
                     from: fromId,
                     to: `class:${argTypeName}`,
-                    type: "USES_MODEL",
+                    type: 'USES_MODEL',
                 });
             }
         }
@@ -269,9 +260,7 @@ function isRepoPattern(name: string): boolean {
 }
 
 function addUniqueRelation(relations: KGRelation[], relation: KGRelation): void {
-    const exists = relations.some(
-        r => r.from === relation.from && r.to === relation.to && r.type === relation.type
-    );
+    const exists = relations.some((r) => r.from === relation.from && r.to === relation.to && r.type === relation.type);
     if (!exists) {
         relations.push(relation);
     }

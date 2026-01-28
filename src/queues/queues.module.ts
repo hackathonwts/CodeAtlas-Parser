@@ -20,10 +20,7 @@ import { Policy, PolicySchema } from 'src/modules/policy/schemas/policy.schema';
         ]),
         BullModule.registerQueue({ name: CODE_PARSER_QUEUE }),
     ],
-    providers: [
-        GitCloneQueue,
-        CodeParserQueue
-    ],
-    exports: []
+    providers: [GitCloneQueue, CodeParserQueue],
+    exports: [],
 })
-export class QueuesModule { }
+export class QueuesModule {}

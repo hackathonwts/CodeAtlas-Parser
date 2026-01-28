@@ -1,28 +1,26 @@
-import { Processor, WorkerHost } from "@nestjs/bullmq";
-import { CODE_PARSER_QUEUE } from "./queue.constant";
-import { Job } from "bullmq";
-import { KGNode, KGRelation } from "src/types/kg.types";
-import { Project } from "ts-morph";
-import { extractStructure } from "src/utils/ast/extract-structure";
-import { extractDI } from "src/utils/ast/extract-di";
-import { extractImports } from "src/utils/ast/extract-imports";
-import { extractInheritance } from "src/utils/ast/extract-inheritance";
-import { extractMethodCalls } from "src/utils/ast/extract-method-calls";
-import { extractRoutes } from "src/utils/ast/extract-routes";
-import { extractTypeUsage } from "src/utils/ast/extract-type-usage";
-import { inspect } from "util";
-import { Neo4jService } from "src/neo4j/neo4j.service";
+import { Processor, WorkerHost } from '@nestjs/bullmq';
+import { CODE_PARSER_QUEUE } from './queue.constant';
+import { Job } from 'bullmq';
+import { KGNode, KGRelation } from 'src/types/kg.types';
+import { Project } from 'ts-morph';
+import { extractStructure } from 'src/utils/ast/extract-structure';
+import { extractDI } from 'src/utils/ast/extract-di';
+import { extractImports } from 'src/utils/ast/extract-imports';
+import { extractInheritance } from 'src/utils/ast/extract-inheritance';
+import { extractMethodCalls } from 'src/utils/ast/extract-method-calls';
+import { extractRoutes } from 'src/utils/ast/extract-routes';
+import { extractTypeUsage } from 'src/utils/ast/extract-type-usage';
+import { inspect } from 'util';
+import { Neo4jService } from 'src/neo4j/neo4j.service';
 
 @Processor(CODE_PARSER_QUEUE)
 export class CodeParserQueue extends WorkerHost {
-    constructor(
-        private readonly neo4jService: Neo4jService
-    ) {
-        super()
+    constructor(private readonly neo4jService: Neo4jService) {
+        super();
     }
 
     async process(job: Job, token?: string): Promise<void> {
-        console.log("Processing job:", job.id, "with data:", job.data, "and token:", token);
+        console.log('Processing job:', job.id, 'with data:', job.data, 'and token:', token);
 
         const { _id, project_path, project_name } = job.data;
         try {
@@ -36,7 +34,7 @@ export class CodeParserQueue extends WorkerHost {
 
     parseProject(projectPath: string): { nodes: KGNode[]; relations: KGRelation[] } {
         const project = new Project({
-            tsConfigFilePath: projectPath + "/tsconfig.json",
+            tsConfigFilePath: projectPath + '/tsconfig.json',
             skipAddingFilesFromTsConfig: false,
         });
 
