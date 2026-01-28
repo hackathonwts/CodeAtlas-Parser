@@ -1,16 +1,13 @@
 import { Global, Module } from "@nestjs/common";
 import { GitUtils } from "./git.utils";
-import { HelperUtils } from "./helper.utils";
 
 @Global()
 @Module({
     providers: [
-        GitUtils,
-        HelperUtils
+        GitUtils
     ],
     exports: [
-        GitUtils,
-        HelperUtils
+        GitUtils
     ]
 })
 export class UtilsModule {}
