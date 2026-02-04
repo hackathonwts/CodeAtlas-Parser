@@ -7,6 +7,20 @@ export enum ProjectStatusEnum {
     Inactive = 'Inactive',
     Archived = 'Archived',
 }
+
+export enum WorkflowStatus {
+    IDLE = 'IDLE',
+    RUNNING = 'RUNNING',
+    FAILED = 'FAILED',
+    COMPLETED = 'COMPLETED',
+}
+
+export enum WorkflowStep {
+    CLONING = 'CLONING',
+    PARSING = 'PARSING',
+    PARSING_COMPLETED = 'PARSING_COMPLETED',
+}
+
 export interface IProject {
     _id?: Types.ObjectId;
 
@@ -32,53 +46,39 @@ export interface IProject {
 
 @Schema({ timestamps: true, versionKey: false })
 export class Project {
-    @Prop({
-        type: Types.ObjectId,
-        required: [true, 'Created by user is required'],
-        ref: User.name,
-    })
+    @Prop({ type: Types.ObjectId, required: [true, 'Created by user is required'], ref: User.name })
     created_by: Types.ObjectId;
 
     @Prop({ type: String, default: '' })
     title: string;
-
     @Prop({ type: String, default: '' })
     description: string;
-
     @Prop({ type: String, default: '' })
     language: string;
 
-    @Prop({
-        type: String,
-        required: true,
-        unique: [true, 'Project with this git link already exists'],
-        index: true,
-    })
+    @Prop({ type: String, required: true, unique: [true, 'Project with this git link already exists'], index: true })
     git_link: string;
-
     @Prop({ type: String, required: [true, 'Git username is required'] })
     git_username: string;
-
     @Prop({ type: String, required: [true, 'Git password is required'] })
     git_password: string;
-
     @Prop({ type: String, required: [true, 'Git branch is required'] })
     git_branch: string;
 
+    @Prop({ enum: WorkflowStatus, default: WorkflowStatus.IDLE, })
+    workflow_status?: WorkflowStatus;
+    @Prop({ type: [String], enum: WorkflowStep, default: [], })
+    completed_steps?: WorkflowStep[];
+
     @Prop({ type: String, lowercase: true, unique: true, index: true })
     uuid: string;
+    @Prop({ type: Number, default: 0 })
+    scan_version: number;
 
-    @Prop({ type: String, required: [true, 'Scan version is required'] })
-    scan_version: string;
-
+    @Prop({ type: String, default: ProjectStatusEnum.Inactive, enum: ProjectStatusEnum })
+    status: string;
     @Prop({ type: Boolean, default: false, index: true })
     is_deleted: boolean;
-    @Prop({
-        type: String,
-        default: ProjectStatusEnum.Inactive,
-        enum: ProjectStatusEnum,
-    })
-    status: string;
 }
 
 export const ProjectSchema = SchemaFactory.createForClass(Project);

@@ -11,7 +11,7 @@ import { extractMethodCalls } from 'src/utils/ast/extract-method-calls';
 import { extractRoutes } from 'src/utils/ast/extract-routes';
 import { extractTypeUsage } from 'src/utils/ast/extract-type-usage';
 import { Neo4jService } from 'src/neo4j/neo4j.service';
-import { ProjectDocument } from 'src/modules/project/schemas/project.schema';
+import { ProjectDocument, WorkflowStatus, WorkflowStep } from 'src/modules/project/schemas/project.schema';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { GitUtils } from 'src/utils/git.utils';
@@ -28,9 +28,9 @@ export class CodeParserQueue extends WorkerHost {
     ) {
         super();
 
-        // this.vectorQueue.add(VECTORIZER_WORKER_QUEUE, {
-        //     projectId: '698335b74794732cc6bb1d9b',
-        // });
+        this.vectorQueue.add(VECTORIZER_WORKER_QUEUE, {
+            projectId: '69834d9974accd77f25850d4',
+        }, { backoff: { type: 'fixed', delay: 5000 }, attempts: 5 });
     }
 
     async process(job: Job, token?: string): Promise<void> {
@@ -38,6 +38,7 @@ export class CodeParserQueue extends WorkerHost {
 
         const project = await this.projectModel.findById(job.data._id);
         if (project?.git_link && project?.git_username && project?.git_password) {
+            await this.projectModel.updateOne({ _id: project._id }, { $set: { workflow_status: WorkflowStatus.RUNNING, completed_steps: [] } });
             await this.notificationModel.create({
                 user_id: project.created_by,
                 title: 'Cloning Started',
@@ -53,21 +54,28 @@ export class CodeParserQueue extends WorkerHost {
             });
 
             if (result.success && result.clonedPath) {
+                await this.projectModel.updateOne({ _id: project._id }, { $push: { completed_steps: WorkflowStep.CLONING } });
                 await this.notificationModel.create({
                     user_id: project.created_by,
                     title: 'Cloning Completed',
                     body: `Completed cloning project ${project.title}.`,
-                });
+                })
 
                 try {
+                    await this.projectModel.updateOne({ _id: project._id }, { $push: { completed_steps: WorkflowStep.PARSING } });
                     const { nodes, relations } = this.parseProject(result.clonedPath);
                     await this.neo4jService.cleanAndImport(project.uuid, nodes, relations);
+                    await this.projectModel.updateOne({ _id: project._id }, {
+                        $set: { workflow_status: WorkflowStatus.COMPLETED },
+                        $push: { completed_steps: WorkflowStep.PARSING_COMPLETED }
+                    });
                     await this.notificationModel.create({
                         user_id: project.created_by,
                         title: 'Parsing Completed',
                         body: `Completed parsing project ${project.title}.`,
                     });
                 } catch (error) {
+                    await this.projectModel.updateOne({ _id: project._id }, { $set: { workflow_status: WorkflowStatus.FAILED } });
                     await this.notificationModel.create({
                         user_id: project.created_by,
                         title: 'Parsing Failed',
@@ -75,6 +83,7 @@ export class CodeParserQueue extends WorkerHost {
                     });
                 }
             } else {
+                await this.projectModel.updateOne({ _id: project._id }, { $set: { workflow_status: WorkflowStatus.FAILED } });
                 await this.notificationModel.create({
                     user_id: project.created_by,
                     title: 'Cloning Failed',
