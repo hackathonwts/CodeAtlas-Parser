@@ -2,7 +2,7 @@ export interface GitCloneConfig {
     gitUrl: string;
     username: string;
     password: string;
-    projectName: string;
+    projectUuid: string;
     branch?: string;
 }
 

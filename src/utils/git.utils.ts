@@ -34,9 +34,9 @@ export class GitUtils {
     }
 
     async cloneGitRepository(config: GitCloneConfig): Promise<GitCloneResult> {
-        const { gitUrl, username, password, projectName, branch } = config;
+        const { gitUrl, username, password, projectUuid, branch } = config;
         try {
-            const targetPath = this.getProjectPath(projectName);
+            const targetPath = this.getProjectPath(projectUuid);
             const authenticatedUrl = this.getAuthenticatedGitUrl(gitUrl, username, password);
             if (!authenticatedUrl) throw new Error('Invalid git url');
 
@@ -54,7 +54,7 @@ export class GitUtils {
                 clonedPath: targetPath,
             };
         } catch (error) {
-            const targetPath = join(this.projectsPath, projectName.replace(/\s+/g, '_').toLowerCase());
+            const targetPath = join(this.projectsPath, projectUuid);
             if (existsSync(targetPath)) {
                 try {
                     rmSync(targetPath, { recursive: true, force: true });

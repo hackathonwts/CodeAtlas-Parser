@@ -26,7 +26,7 @@ export class Notification {
         trim: true,
         index: true,
     })
-    user_id: string;
+    user_id: string | Types.ObjectId;
 
     @Prop({
         type: String,
