@@ -8,6 +8,7 @@ import { Project, ProjectSchema } from 'src/modules/project/schemas/project.sche
 import { Role, RoleSchema } from 'src/modules/role/schemas/role.schema';
 import { User, UserSchema } from 'src/modules/user/schemas/user.schema';
 import { Policy, PolicySchema } from 'src/modules/policy/schemas/policy.schema';
+import { Neo4jService } from 'src/neo4j/neo4j.service';
 
 @Global()
 @Module({
@@ -20,7 +21,7 @@ import { Policy, PolicySchema } from 'src/modules/policy/schemas/policy.schema';
         ]),
         BullModule.registerQueue({ name: CODE_PARSER_QUEUE }),
     ],
-    providers: [GitCloneQueue, CodeParserQueue],
+    providers: [GitCloneQueue, CodeParserQueue, Neo4jService],
     exports: [],
 })
 export class QueuesModule {}
