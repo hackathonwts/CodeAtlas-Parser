@@ -89,7 +89,7 @@ ProjectSchema.plugin(require('mongoose-aggregate-paginate-v2'));
 ProjectSchema.pre('validate', async function () {
     if (!this.uuid) {
         const seed = Math.random().toString(36).substring(2, 10);
-        this.uuid = `${this.title}-${this.git_branch}-${seed}`;
+        this.uuid = `${this.title.replace(/\s+/g, '-')}-${this.git_branch.replace(/\s+/g, '-')}-${seed}`.toLowerCase();
     }
 });
 
