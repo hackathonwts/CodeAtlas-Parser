@@ -1,6 +1,8 @@
 import { Project, SyntaxKind, Node } from 'ts-morph';
 import { KGRelation } from '../../types/kg.types';
 import { relative, sep } from 'path';
+import { detectFileSubtype } from './detect-file-subtype';
+import * as IdGen from './id-generator';
 
 /**
  * Extracts import relationships with actual usage tracking.
@@ -12,44 +14,56 @@ import { relative, sep } from 'path';
  */
 export function extractImports(project: Project): KGRelation[] {
     const relations: KGRelation[] = [];
-    const srcDir = project.getDirectories().find((d) => d.getPath().endsWith(`${sep}src`));
-    const srcRoot = srcDir?.getPath() || '';
+    const srcDir = project.getDirectories().find(d => d.getPath().endsWith(`${sep}src`));
+    const srcRoot = srcDir?.getPath() || "";
 
-    project.getSourceFiles().forEach((file) => {
+    project.getSourceFiles().forEach(file => {
         const absolutePath = file.getFilePath();
-        const relativePath = srcRoot ? `src/${relative(srcRoot, absolutePath).split(sep).join('/')}` : absolutePath;
-        const fileId = `file:${relativePath}`;
+        const relativePath = srcRoot
+            ? `src/${relative(srcRoot, absolutePath).split(sep).join("/")}`
+            : absolutePath;
+        const fileName = file.getBaseName();
+        const fileSubtype = detectFileSubtype(fileName);
+        const fileId = IdGen.generateFileId(relativePath, fileSubtype);
 
         // Get all imports in this file
-        file.getImportDeclarations().forEach((importDecl) => {
+        file.getImportDeclarations().forEach(importDecl => {
             const moduleSpecifier = importDecl.getModuleSpecifierValue();
 
-            // Skip node_modules imports
-            if (!moduleSpecifier.startsWith('.') && !moduleSpecifier.startsWith('/')) {
+            // Resolve the imported file using ts-morph's module resolution
+            // This handles both relative imports (./file) and path aliases (@common/file)
+            const importedFile = importDecl.getModuleSpecifierSourceFile();
+
+            // Skip if the import couldn't be resolved (likely external node_modules)
+            if (!importedFile) return;
+
+            // Skip if it's outside the src directory (external dependencies)
+            if (srcRoot && !importedFile.getFilePath().includes(srcRoot)) {
                 return;
             }
 
-            // Resolve the imported file
-            const importedFile = importDecl.getModuleSpecifierSourceFile();
-            if (!importedFile) return;
-
-            const importedFilePath = srcRoot ? `src/${relative(srcRoot, importedFile.getFilePath()).split(sep).join('/')}` : importedFile.getFilePath();
-            const importedFileId = `file:${importedFilePath}`;
+            const importedFilePath = srcRoot
+                ? `src/${relative(srcRoot, importedFile.getFilePath()).split(sep).join("/")}`
+                : importedFile.getFilePath();
+            const importedFileName = importedFile.getBaseName();
+            const importedFileSubtype = detectFileSubtype(importedFileName);
+            const importedFileId = IdGen.generateFileId(importedFilePath, importedFileSubtype);
 
             // Create file imports file relationship
             addUniqueRelation(relations, {
                 from: fileId,
                 to: importedFileId,
-                type: 'IMPORTS',
+                type: "IMPORTS",
             });
 
             // Track named imports and their usage
-            importDecl.getNamedImports().forEach((namedImport) => {
+            importDecl.getNamedImports().forEach(namedImport => {
                 const importedName = namedImport.getName();
                 const alias = namedImport.getAliasNode()?.getText() || importedName;
 
                 // Find references to this imported name in the current file
-                const refs = file.getDescendantsOfKind(SyntaxKind.Identifier).filter((id) => id.getText() === alias && id !== namedImport.getNameNode());
+                const refs = file.getDescendantsOfKind(SyntaxKind.Identifier)
+                    .filter(id => id.getText() === alias && id !== namedImport.getNameNode());
 
                 if (refs.length > 0) {
                     // This import is actually used in the file
@@ -61,40 +75,51 @@ export function extractImports(project: Project): KGRelation[] {
 
                             // Determine the type of import and create appropriate relationship
                             if (kind === SyntaxKind.ClassDeclaration) {
+                                const targetClassId = IdGen.generateClassId(importedName, importedFilePath);
                                 addUniqueRelation(relations, {
                                     from: fileId,
-                                    to: `class:${importedName}`,
-                                    type: 'IMPORTS_CLASS',
+                                    to: targetClassId,
+                                    type: "IMPORTS_CLASS",
                                 });
-                            } else if (kind === SyntaxKind.InterfaceDeclaration) {
+                            }
+                            else if (kind === SyntaxKind.InterfaceDeclaration) {
+                                const targetInterfaceId = IdGen.generateInterfaceId(importedName, importedFilePath);
                                 addUniqueRelation(relations, {
                                     from: fileId,
-                                    to: `interface:${importedName}`,
-                                    type: 'IMPORTS_INTERFACE',
+                                    to: targetInterfaceId,
+                                    type: "IMPORTS_INTERFACE",
                                 });
-                            } else if (kind === SyntaxKind.EnumDeclaration) {
+                            }
+                            else if (kind === SyntaxKind.EnumDeclaration) {
+                                const targetEnumId = IdGen.generateEnumId(importedName, importedFilePath);
                                 addUniqueRelation(relations, {
                                     from: fileId,
-                                    to: `enum:${importedName}`,
-                                    type: 'IMPORTS_ENUM',
+                                    to: targetEnumId,
+                                    type: "IMPORTS_ENUM",
                                 });
-                            } else if (kind === SyntaxKind.FunctionDeclaration) {
+                            }
+                            else if (kind === SyntaxKind.FunctionDeclaration) {
+                                const targetFuncId = IdGen.generateFunctionId(importedName, importedFilePath);
                                 addUniqueRelation(relations, {
                                     from: fileId,
-                                    to: `function:${importedFilePath}:${importedName}`,
-                                    type: 'IMPORTS_FUNCTION',
+                                    to: targetFuncId,
+                                    type: "IMPORTS_FUNCTION",
                                 });
-                            } else if (kind === SyntaxKind.TypeAliasDeclaration) {
+                            }
+                            else if (kind === SyntaxKind.TypeAliasDeclaration) {
+                                const targetTypeId = IdGen.generateTypeAliasId(importedName, importedFilePath);
                                 addUniqueRelation(relations, {
                                     from: fileId,
-                                    to: `type:${importedName}`,
-                                    type: 'IMPORTS_TYPE',
+                                    to: targetTypeId,
+                                    type: "IMPORTS_TYPE",
                                 });
-                            } else if (kind === SyntaxKind.VariableDeclaration) {
+                            }
+                            else if (kind === SyntaxKind.VariableDeclaration) {
+                                const targetVarId = IdGen.generateVariableId(importedName, importedFilePath);
                                 addUniqueRelation(relations, {
                                     from: fileId,
-                                    to: `variable:${importedFilePath}:${importedName}`,
-                                    type: 'IMPORTS_VARIABLE',
+                                    to: targetVarId,
+                                    type: "IMPORTS_VARIABLE",
                                 });
                             }
                         }
@@ -106,14 +131,15 @@ export function extractImports(project: Project): KGRelation[] {
             const defaultImport = importDecl.getDefaultImport();
             if (defaultImport) {
                 const defaultName = defaultImport.getText();
-                const refs = file.getDescendantsOfKind(SyntaxKind.Identifier).filter((id) => id.getText() === defaultName && id !== defaultImport);
+                const refs = file.getDescendantsOfKind(SyntaxKind.Identifier)
+                    .filter(id => id.getText() === defaultName && id !== defaultImport);
 
                 if (refs.length > 0) {
                     // The default import is actually used
                     addUniqueRelation(relations, {
                         from: fileId,
                         to: importedFileId,
-                        type: 'IMPORTS_DEFAULT',
+                        type: "IMPORTS_DEFAULT",
                     });
                 }
             }
@@ -122,40 +148,45 @@ export function extractImports(project: Project): KGRelation[] {
             const namespaceImport = importDecl.getNamespaceImport();
             if (namespaceImport) {
                 const nsName = namespaceImport.getText();
-                const refs = file.getDescendantsOfKind(SyntaxKind.Identifier).filter((id) => id.getText() === nsName && id !== namespaceImport);
+                const refs = file.getDescendantsOfKind(SyntaxKind.Identifier)
+                    .filter(id => id.getText() === nsName && id !== namespaceImport);
 
                 if (refs.length > 0) {
                     addUniqueRelation(relations, {
                         from: fileId,
                         to: importedFileId,
-                        type: 'IMPORTS_NAMESPACE',
+                        type: "IMPORTS_NAMESPACE",
                     });
                 }
             }
         });
 
         // Track class-level import usage (which classes use which imported classes)
-        file.getClasses().forEach((cls) => {
-            const classId = `class:${cls.getName()}`;
+        file.getClasses().forEach(cls => {
+            const className = cls.getName() || "AnonymousClass";
+            const classId = IdGen.generateClassId(className, relativePath);
 
             // Check constructor parameters for injected dependencies
             const ctor = cls.getConstructors()[0];
             if (ctor) {
-                ctor.getParameters().forEach((param) => {
+                ctor.getParameters().forEach(param => {
                     const typeSymbol = param.getType().getSymbol();
                     if (typeSymbol) {
                         const typeName = typeSymbol.getName();
                         const typeDecl = typeSymbol.getDeclarations()?.[0];
                         if (typeDecl) {
                             const typeFile = typeDecl.getSourceFile();
-                            const typeFilePath = srcRoot ? `src/${relative(srcRoot, typeFile.getFilePath()).split(sep).join('/')}` : typeFile.getFilePath();
+                            const typeFilePath = srcRoot
+                                ? `src/${relative(srcRoot, typeFile.getFilePath()).split(sep).join("/")}`
+                                : typeFile.getFilePath();
 
                             // If the type is from a different file, it's an imported dependency
                             if (typeFilePath !== relativePath) {
+                                const targetClassId = IdGen.generateClassId(typeName, typeFilePath);
                                 addUniqueRelation(relations, {
                                     from: classId,
-                                    to: `class:${typeName}`,
-                                    type: 'DEPENDS_ON',
+                                    to: targetClassId,
+                                    type: "DEPENDS_ON",
                                 });
                             }
                         }
@@ -164,20 +195,23 @@ export function extractImports(project: Project): KGRelation[] {
             }
 
             // Check class properties for type dependencies
-            cls.getProperties().forEach((prop) => {
+            cls.getProperties().forEach(prop => {
                 const typeSymbol = prop.getType().getSymbol();
                 if (typeSymbol) {
                     const typeName = typeSymbol.getName();
                     const typeDecl = typeSymbol.getDeclarations()?.[0];
                     if (typeDecl && typeDecl.getKind() === SyntaxKind.ClassDeclaration) {
                         const typeFile = typeDecl.getSourceFile();
-                        const typeFilePath = srcRoot ? `src/${relative(srcRoot, typeFile.getFilePath()).split(sep).join('/')}` : typeFile.getFilePath();
+                        const typeFilePath = srcRoot
+                            ? `src/${relative(srcRoot, typeFile.getFilePath()).split(sep).join("/")}`
+                            : typeFile.getFilePath();
 
                         if (typeFilePath !== relativePath) {
+                            const targetClassId = IdGen.generateClassId(typeName, typeFilePath);
                             addUniqueRelation(relations, {
                                 from: classId,
-                                to: `class:${typeName}`,
-                                type: 'HAS_DEPENDENCY',
+                                to: targetClassId,
+                                type: "HAS_DEPENDENCY",
                             });
                         }
                     }

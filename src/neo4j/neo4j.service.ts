@@ -5,7 +5,7 @@ import { KGNode, KGRelation } from '../types/kg.types';
 
 @Injectable()
 export class Neo4jService implements OnModuleDestroy {
-    constructor(@Inject(NEO4J_DRIVER) private readonly driver: Driver) {}
+    constructor(@Inject(NEO4J_DRIVER) private readonly driver: Driver) { }
 
     getSession(database?: string): Session {
         return this.driver.session(database ? { database } : undefined);

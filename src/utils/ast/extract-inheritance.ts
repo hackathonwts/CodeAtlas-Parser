@@ -10,9 +10,9 @@ import { KGRelation } from '../../types/kg.types';
 export function extractInheritance(project: Project): KGRelation[] {
     const relations: KGRelation[] = [];
 
-    project.getSourceFiles().forEach((file) => {
+    project.getSourceFiles().forEach(file => {
         // Extract class inheritance
-        file.getClasses().forEach((cls) => {
+        file.getClasses().forEach(cls => {
             const className = cls.getName();
             if (!className) return;
 
@@ -25,44 +25,44 @@ export function extractInheritance(project: Project): KGRelation[] {
                 addUniqueRelation(relations, {
                     from: classId,
                     to: `class:${baseClassName}`,
-                    type: 'EXTENDS',
+                    type: "EXTENDS",
                 });
             }
 
             // Check for implements clause
-            cls.getImplements().forEach((impl) => {
+            cls.getImplements().forEach(impl => {
                 const interfaceName = impl.getExpression().getText();
                 addUniqueRelation(relations, {
                     from: classId,
                     to: `interface:${interfaceName}`,
-                    type: 'IMPLEMENTS',
+                    type: "IMPLEMENTS",
                 });
             });
 
             // Check for decorators that might indicate patterns (like @Injectable, @Entity, etc.)
-            cls.getDecorators().forEach((decorator) => {
+            cls.getDecorators().forEach(decorator => {
                 const decoratorName = decorator.getName();
                 if (decoratorName) {
                     addUniqueRelation(relations, {
                         from: classId,
                         to: `decorator:${decoratorName}`,
-                        type: 'DECORATED_BY',
+                        type: "DECORATED_BY",
                     });
                 }
             });
         });
 
         // Extract interface inheritance
-        file.getInterfaces().forEach((iface) => {
+        file.getInterfaces().forEach(iface => {
             const ifaceName = iface.getName();
             const ifaceId = `interface:${ifaceName}`;
 
-            iface.getExtends().forEach((ext) => {
+            iface.getExtends().forEach(ext => {
                 const baseInterfaceName = ext.getExpression().getText();
                 addUniqueRelation(relations, {
                     from: ifaceId,
                     to: `interface:${baseInterfaceName}`,
-                    type: 'EXTENDS',
+                    type: "EXTENDS",
                 });
             });
         });

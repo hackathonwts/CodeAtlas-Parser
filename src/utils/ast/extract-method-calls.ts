@@ -1,30 +1,31 @@
-import { Project, SyntaxKind, PropertyAccessExpression, Node, SourceFile, ClassDeclaration } from 'ts-morph';
-import { KGRelation } from '../../types/kg.types';
-import { relative, sep } from 'path';
+import { Project, SyntaxKind, PropertyAccessExpression, Node, SourceFile, ClassDeclaration } from "ts-morph";
+import { KGRelation } from "../../types/kg.types";
+import { relative, sep } from "path";
+import * as IdGen from "./id-generator.js";
 
 /**
  * Extracts method call relationships - tracks which methods call which other methods
- * This captures the actual usage patterns in code, e.g.,
+ * This captures the actual usage patterns in code, e.g., 
  * login() calls findUser() -> creates CALLS relationship
  */
 export function extractMethodCalls(project: Project): KGRelation[] {
     const relations: KGRelation[] = [];
-    const srcDir = project.getDirectories().find((d) => d.getPath().endsWith(`${sep}src`));
-    const srcRoot = srcDir?.getPath() || '';
+    const srcDir = project.getDirectories().find(d => d.getPath().endsWith(`${sep}src`));
+    const srcRoot = srcDir?.getPath() || "";
 
-    project.getSourceFiles().forEach((file) => {
-        const relativePath = srcRoot ? `src/${relative(srcRoot, file.getFilePath()).split(sep).join('/')}` : file.getFilePath();
+    project.getSourceFiles().forEach(file => {
+        const relativePath = srcRoot ? `src/${relative(srcRoot, file.getFilePath()).split(sep).join("/")}` : file.getFilePath();
 
         // Process class methods
-        file.getClasses().forEach((cls) => {
+        file.getClasses().forEach(cls => {
             const className = cls.getName();
             if (!className) return;
 
-            cls.getMethods().forEach((method) => {
-                const fromMethodId = `method:${className}.${method.getName()}`;
+            cls.getMethods().forEach(method => {
+                const fromMethodId = IdGen.generateMethodId(className, method.getName(), relativePath);
 
                 // Find all call expressions within this method
-                method.getDescendantsOfKind(SyntaxKind.CallExpression).forEach((call) => {
+                method.getDescendantsOfKind(SyntaxKind.CallExpression).forEach(call => {
                     const expression = call.getExpression();
 
                     // Handle method calls like this.service.findUser() or authService.findUser()
@@ -47,19 +48,21 @@ export function extractMethodCalls(project: Project): KGRelation[] {
                                 addUniqueRelation(relations, {
                                     from: fromMethodId,
                                     to: toMethodId,
-                                    type: 'CALLS',
+                                    type: "CALLS",
                                 });
                             }
                         }
                         // Check if it's a standalone function
                         else if (Node.isFunctionDeclaration(decl)) {
                             const funcFile = decl.getSourceFile();
-                            const funcRelPath = srcRoot ? `src/${relative(srcRoot, funcFile.getFilePath()).split(sep).join('/')}` : funcFile.getFilePath();
+                            const funcRelPath = srcRoot
+                                ? `src/${relative(srcRoot, funcFile.getFilePath()).split(sep).join("/")}`
+                                : funcFile.getFilePath();
                             const toFuncId = `function:${funcRelPath}:${decl.getName()}`;
                             addUniqueRelation(relations, {
                                 from: fromMethodId,
                                 to: toFuncId,
-                                type: 'CALLS',
+                                type: "CALLS",
                             });
                         }
                     }
@@ -68,18 +71,19 @@ export function extractMethodCalls(project: Project): KGRelation[] {
         });
 
         // Process standalone functions
-        file.getFunctions().forEach((func) => {
+        file.getFunctions().forEach(func => {
             const funcName = func.getName();
             if (!funcName) return;
 
             const fromFuncId = `function:${relativePath}:${funcName}`;
 
-            func.getDescendantsOfKind(SyntaxKind.CallExpression).forEach((call) => {
+            func.getDescendantsOfKind(SyntaxKind.CallExpression).forEach(call => {
                 const expression = call.getExpression();
 
                 if (Node.isPropertyAccessExpression(expression)) {
                     processPropertyAccessCallFromFunction(expression, fromFuncId, relations, srcRoot);
-                } else if (Node.isIdentifier(expression)) {
+                }
+                else if (Node.isIdentifier(expression)) {
                     const symbol = expression.getSymbol();
                     if (!symbol) return;
 
@@ -93,17 +97,20 @@ export function extractMethodCalls(project: Project): KGRelation[] {
                             addUniqueRelation(relations, {
                                 from: fromFuncId,
                                 to: toMethodId,
-                                type: 'CALLS',
+                                type: "CALLS",
                             });
                         }
-                    } else if (Node.isFunctionDeclaration(decl)) {
+                    }
+                    else if (Node.isFunctionDeclaration(decl)) {
                         const funcFile = decl.getSourceFile();
-                        const funcRelPath = srcRoot ? `src/${relative(srcRoot, funcFile.getFilePath()).split(sep).join('/')}` : funcFile.getFilePath();
+                        const funcRelPath = srcRoot
+                            ? `src/${relative(srcRoot, funcFile.getFilePath()).split(sep).join("/")}`
+                            : funcFile.getFilePath();
                         const toFuncId = `function:${funcRelPath}:${decl.getName()}`;
                         addUniqueRelation(relations, {
                             from: fromFuncId,
                             to: toFuncId,
-                            type: 'CALLS',
+                            type: "CALLS",
                         });
                     }
                 }
@@ -117,7 +124,12 @@ export function extractMethodCalls(project: Project): KGRelation[] {
 /**
  * Process property access calls like this.authService.findUser()
  */
-function processPropertyAccessCall(expression: PropertyAccessExpression, fromMethodId: string, relations: KGRelation[], currentClass: ClassDeclaration): void {
+function processPropertyAccessCall(
+    expression: PropertyAccessExpression,
+    fromMethodId: string,
+    relations: KGRelation[],
+    currentClass: ClassDeclaration
+): void {
     const methodName = expression.getName();
     const symbol = expression.getNameNode().getSymbol();
 
@@ -136,7 +148,7 @@ function processPropertyAccessCall(expression: PropertyAccessExpression, fromMet
             addUniqueRelation(relations, {
                 from: fromMethodId,
                 to: toMethodId,
-                type: 'CALLS',
+                type: "CALLS",
             });
 
             // Also check the object being called on - this helps track which service/class is being used
@@ -155,7 +167,7 @@ function processPropertyAccessCall(expression: PropertyAccessExpression, fromMet
                             addUniqueRelation(relations, {
                                 from: `class:${currentClass.getName()}`,
                                 to: `class:${typeName}`,
-                                type: 'USES',
+                                type: "USES",
                             });
                         }
                     }
@@ -165,7 +177,12 @@ function processPropertyAccessCall(expression: PropertyAccessExpression, fromMet
     }
 }
 
-function processPropertyAccessCallFromFunction(expression: PropertyAccessExpression, fromFuncId: string, relations: KGRelation[], srcRoot: string): void {
+function processPropertyAccessCallFromFunction(
+    expression: PropertyAccessExpression,
+    fromFuncId: string,
+    relations: KGRelation[],
+    srcRoot: string
+): void {
     const methodName = expression.getName();
     const symbol = expression.getNameNode().getSymbol();
 
@@ -181,23 +198,28 @@ function processPropertyAccessCallFromFunction(expression: PropertyAccessExpress
             addUniqueRelation(relations, {
                 from: fromFuncId,
                 to: toMethodId,
-                type: 'CALLS',
+                type: "CALLS",
             });
         }
-    } else if (Node.isFunctionDeclaration(decl)) {
+    }
+    else if (Node.isFunctionDeclaration(decl)) {
         const funcFile = decl.getSourceFile();
-        const funcRelPath = srcRoot ? `src/${relative(srcRoot, funcFile.getFilePath()).split(sep).join('/')}` : funcFile.getFilePath();
+        const funcRelPath = srcRoot
+            ? `src/${relative(srcRoot, funcFile.getFilePath()).split(sep).join("/")}`
+            : funcFile.getFilePath();
         const toFuncId = `function:${funcRelPath}:${decl.getName()}`;
         addUniqueRelation(relations, {
             from: fromFuncId,
             to: toFuncId,
-            type: 'CALLS',
+            type: "CALLS",
         });
     }
 }
 
 function addUniqueRelation(relations: KGRelation[], relation: KGRelation): void {
-    const exists = relations.some((r) => r.from === relation.from && r.to === relation.to && r.type === relation.type);
+    const exists = relations.some(
+        r => r.from === relation.from && r.to === relation.to && r.type === relation.type
+    );
     if (!exists) {
         relations.push(relation);
     }
