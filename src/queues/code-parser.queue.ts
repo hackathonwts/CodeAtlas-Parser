@@ -19,6 +19,7 @@ import { Notification, NotificationDocument } from 'src/modules/notification/sch
 import { extractMarkdownDocs } from 'src/utils/ast/extract-markdown-docs';
 import { extractDescriptions } from 'src/utils/ast/extract-descriptions';
 import { ProjectService } from 'src/modules/project/project.service';
+import { existsSync, rmSync } from 'fs';
 
 @Processor(CODE_PARSER_QUEUE)
 export class CodeParserQueue extends WorkerHost {
@@ -31,10 +32,6 @@ export class CodeParserQueue extends WorkerHost {
         private readonly neo4jService: Neo4jService,
     ) {
         super();
-
-        // this.vectorQueue.add(VECTORIZER_WORKER_QUEUE, {
-        //     projectId: '69834d9974accd77f25850d4',
-        // }, { backoff: { type: 'fixed', delay: 5000 }, attempts: 5 });
     }
 
     async process(job: Job, token?: string): Promise<void> {
@@ -75,6 +72,10 @@ export class CodeParserQueue extends WorkerHost {
                     await this.neo4jService.cleanAndImport(project.uuid, nodes, relations);
                     await this.projectService.dumpDocumentation(project._id, documentation);
 
+                    this.vectorQueue.add(VECTORIZER_WORKER_QUEUE, {
+                        projectId: project._id,
+                    }, { backoff: { type: 'exponential', delay: 60 * 1000 }, attempts: 3 })
+
                     await Promise.all([
                         this.projectModel.updateOne({ _id: project._id }, {
                             $set: { workflow_status: WorkflowStatus.COMPLETED },
@@ -87,6 +88,7 @@ export class CodeParserQueue extends WorkerHost {
                         })
                     ])
                 } catch (error) {
+                    console.error(error);
                     await Promise.all([
                         this.projectModel.updateOne({ _id: project._id }, { $set: { workflow_status: WorkflowStatus.FAILED } }),
                         this.notificationModel.create({
@@ -95,8 +97,17 @@ export class CodeParserQueue extends WorkerHost {
                             body: `Failed to parse project ${project.title}. Error: ${error.message}`,
                         })
                     ]);
+                } finally {
+                    if (existsSync(result.clonedPath)) {
+                        try {
+                            rmSync(result.clonedPath, { recursive: true, force: true });
+                        } catch (clnp_error) {
+                            console.error('Failed to clean up partial clone:', clnp_error);
+                        }
+                    }
                 }
             } else {
+                console.error(result.error);
                 await Promise.all([
                     this.projectModel.updateOne({ _id: project._id }, { $set: { workflow_status: WorkflowStatus.FAILED } }),
                     this.notificationModel.create({
