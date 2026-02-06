@@ -21,7 +21,7 @@ export function extractRoutes(project: Project): { nodes: KGNode[]; relations: K
                 const routeId = `route:${httpMethod}:${controllerPath}/${routePath}`;
 
                 nodes.push({
-                    id: routeId,
+                    eid: routeId,
                     kind: 'Route',
                     name: `${httpMethod} /${controllerPath}/${routePath}`,
                     meta: { httpMethod, path: `/${controllerPath}/${routePath}` },

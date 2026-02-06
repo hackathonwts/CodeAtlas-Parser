@@ -1,13 +1,25 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { HydratedDocument } from 'mongoose';
 
+export interface IProjectMarkdown {
+    projectId?: mongoose.Types.ObjectId;
+    filePath: string;
+    fileName: string;
+    content: string;
+    cleanedContent: string;
+    chunks: string[];
+    relatedNodeIds: string[];
+    matchType: string;
+    scanVersion?: number;
+
+    _id?: mongoose.Types.ObjectId;
+    createdAt?: Date;
+    updatedAt?: Date;
+}
+
 @Schema({ timestamps: true, versionKey: false })
 export class ProjectMarkdown {
-    @Prop({
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Project',
-        required: true,
-    })
+    @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Project', required: true, })
     projectId: mongoose.Types.ObjectId;
 
     @Prop({ required: true })

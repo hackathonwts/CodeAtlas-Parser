@@ -9,10 +9,12 @@ import { User, UserSchema } from 'src/modules/user/schemas/user.schema';
 import { Policy, PolicySchema } from 'src/modules/policy/schemas/policy.schema';
 import { Neo4jService } from 'src/neo4j/neo4j.service';
 import { Notification, NotificationSchema } from 'src/modules/notification/schemas/notification.schema';
+import { ProjectModule } from 'src/modules/project/project.module';
 
 @Global()
 @Module({
     imports: [
+        ProjectModule,
         MongooseModule.forFeature([
             { name: Project.name, schema: ProjectSchema },
             { name: Role.name, schema: RoleSchema },

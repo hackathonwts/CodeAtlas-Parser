@@ -142,7 +142,7 @@ export class Neo4jService implements OnModuleDestroy {
             for (const node of nodes) {
                 const flattenedMeta = this.flattenMeta(node.meta);
                 await tx.run(this.nodeMergeCypher(node.kind), {
-                    id: node.id,
+                    eid: node.eid,
                     props: {
                         name: node.name,
                         filePath: node.filePath || null,
