@@ -14,7 +14,7 @@ export type NodeKind =
     | "Model";
 
 export interface KGNode {
-    id: string;
+    uid: string;
     kind: NodeKind;
     name: string;
     filePath?: string;

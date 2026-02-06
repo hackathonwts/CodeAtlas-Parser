@@ -18,7 +18,7 @@ export function extractStructure(project: Project): { nodes: KGNode[]; relations
 
         // Add File node
         nodes.push({
-            id: fileId,
+            uid: fileId,
             kind: 'File',
             name: file.getBaseName(),
             filePath: relativePath,
@@ -30,7 +30,7 @@ export function extractStructure(project: Project): { nodes: KGNode[]; relations
             const classId = `class:${className}`;
 
             nodes.push({
-                id: classId,
+                uid: classId,
                 kind: 'Class',
                 name: className,
                 filePath: relativePath,
@@ -48,7 +48,7 @@ export function extractStructure(project: Project): { nodes: KGNode[]; relations
                 const methodId = `method:${className}.${methodName}`;
 
                 nodes.push({
-                    id: methodId,
+                    uid: methodId,
                     kind: 'Method',
                     name: methodName,
                     parentId: classId,
@@ -78,7 +78,7 @@ export function extractStructure(project: Project): { nodes: KGNode[]; relations
                     const paramId = `param:${className}.${methodName}.${paramName}`;
 
                     nodes.push({
-                        id: paramId,
+                        uid: paramId,
                         kind: 'Parameter',
                         name: paramName,
                         parentId: methodId,
@@ -136,7 +136,7 @@ export function extractStructure(project: Project): { nodes: KGNode[]; relations
                 const propId = `property:${className}.${propName}`;
 
                 nodes.push({
-                    id: propId,
+                    uid: propId,
                     kind: 'Property',
                     name: propName,
                     parentId: classId,
@@ -191,7 +191,7 @@ export function extractStructure(project: Project): { nodes: KGNode[]; relations
             const funcId = `function:${relativePath}:${funcName}`;
 
             nodes.push({
-                id: funcId,
+                uid: funcId,
                 kind: 'Function',
                 name: funcName,
                 filePath: relativePath,
@@ -219,7 +219,7 @@ export function extractStructure(project: Project): { nodes: KGNode[]; relations
             const ifaceId = `interface:${ifaceName}`;
 
             nodes.push({
-                id: ifaceId,
+                uid: ifaceId,
                 kind: 'Interface',
                 name: ifaceName,
                 filePath: relativePath,
@@ -255,7 +255,7 @@ export function extractStructure(project: Project): { nodes: KGNode[]; relations
             const enumId = `enum:${enumName}`;
 
             nodes.push({
-                id: enumId,
+                uid: enumId,
                 kind: 'Enum',
                 name: enumName,
                 filePath: relativePath,
@@ -276,7 +276,7 @@ export function extractStructure(project: Project): { nodes: KGNode[]; relations
                 const memberId = `enumMember:${enumName}.${memberName}`;
 
                 nodes.push({
-                    id: memberId,
+                    uid: memberId,
                     kind: 'EnumMember',
                     name: memberName,
                     parentId: enumId,
@@ -299,7 +299,7 @@ export function extractStructure(project: Project): { nodes: KGNode[]; relations
             const typeId = `type:${typeName}`;
 
             nodes.push({
-                id: typeId,
+                uid: typeId,
                 kind: 'TypeAlias',
                 name: typeName,
                 filePath: relativePath,
@@ -323,7 +323,7 @@ export function extractStructure(project: Project): { nodes: KGNode[]; relations
                 const varId = `variable:${relativePath}:${varName}`;
 
                 nodes.push({
-                    id: varId,
+                    uid: varId,
                     kind: 'Variable',
                     name: varName,
                     filePath: relativePath,
