@@ -74,7 +74,7 @@ export class CodeParserQueue extends WorkerHost {
 
                     this.vectorQueue.add(VECTORIZER_WORKER_QUEUE, {
                         projectId: project._id,
-                    }, { backoff: { type: 'exponential', delay: 60 * 1000 }, attempts: 3 })
+                    }, { backoff: { type: 'exponential', delay: 3 * 60 * 1000 }, attempts: 3 })
 
                     await Promise.all([
                         this.projectModel.updateOne({ _id: project._id }, {
